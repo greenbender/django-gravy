@@ -1,0 +1,1 @@
+{% if errors %} data-toggle="popover" data-container="body" data-trigger="manual"{% if placement %} data-placement="{{ placement }}"{% endif %} data-html="true" data-content="<ul class='list-unstyled'>{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul>"{% endif %}

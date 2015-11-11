@@ -1,0 +1,8 @@
+{% load widget_tweaks %}
+{% for field in form %}
+{% if forloop.first %}
+{% include 'gravy/form_field_snippet.html' with field=field|attr:"autofocus" %}
+{% else %}
+{% include 'gravy/form_field_snippet.html' with field=field %}
+{% endif %}
+{% endfor %}

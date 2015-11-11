@@ -1,0 +1,11 @@
+{% load betterforms_tags %}
+{% if field.is_hidden %}
+{{ field }}
+{% else %}
+<div class="form-group{% if field.errors %} has-error{% endif %}"{% if field.help_text %} title="{{ field.help_text }}"{% endif %}>
+    {% if field.label %}<label class="control-label col-xs-3" for="{{ field.id_for_label }}">{{ field.label }}</label>{% endif %}
+    <div class="{% if not field.label %}col-xs-offset-3 {% endif %}col-xs-9"{% include "gravy/error_popover_snippet.html" with errors=field.errors %}>
+        {{ field }}
+    </div>
+</div>
+{% endif %}

@@ -1,0 +1,4 @@
+.terminal {font-family:monospace; height:500px; background-color:#000; color:#aaa; padding:10px;overflow-y:scroll;overflow-x:hidden;}
+.terminal .prompt {margin-right:10px;}
+.terminal pre {margin-top:0;}
+.terminal input {font:inherit; border:none; outline:none; margin:0; padding:0; background-color:transparent; color:#aaa;}

@@ -1,0 +1,10 @@
+<fieldset{% if fieldset.fieldset.is_hidden %} style="position:absolute;visibility:hidden;"{% endif %}>
+	{% block fieldset %}
+	{% block legend %}
+	<legend>{{ fieldset.legend }}</legend>
+	{% endblock %}
+	{% block fields %}
+    {% for field in fieldset %}{% include 'gravy/form_field_snippet.html' with field=field %}{% endfor %}
+	{% endblock %}
+	{% endblock %}
+</fieldset>

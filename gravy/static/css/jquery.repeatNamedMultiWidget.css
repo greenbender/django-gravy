@@ -1,0 +1,3 @@
+.repeat-named-multi-widget {padding:0;margin:0;}
+.repeat-named-multi-widget > li {padding-left:15px; border-left:10px solid #f8f8f8;list-style-type:none;margin-top:20px;}
+.repeat-named-multi-widget > li:first-child {margin-top:0;}

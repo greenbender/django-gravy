@@ -1,0 +1,10 @@
+{% load betterforms_tags %}
+{% if field.is_hidden %}
+{{ field }}
+{% else %}
+<div class="form-group{% if field.errors %} has-error{% endif %}"{% if field.help_text %} title="{{ field.help_text }}"{% endif %}>
+    <div{% include "gravy/error_popover_snippet.html" with errors=field.errors placement='top' %}>
+        {{ field }}
+    </div>
+</div>
+{% endif %}
