@@ -1,4 +1,4 @@
-from django.conf.urls import patterns
+from django.conf.urls import url
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from .namespace import NamespaceHandlerRegistry
@@ -18,4 +18,4 @@ def ws(request, namespace=None):
     return HttpResponse()
 
 
-urls = patterns('', (r'', ws))
+urls = [url(r'', ws)]
