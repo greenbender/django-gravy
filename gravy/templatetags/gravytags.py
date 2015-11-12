@@ -41,7 +41,7 @@ class PrettyHtmlNode(Node):
 
     def render(self, context):
         output = self.nodelist.render(context)
-        soup = BeautifulSoup(output)
+        soup = BeautifulSoup(output, 'html.parser')
         return soup.prettify(formatter='html')
 
 
