@@ -26,6 +26,7 @@ setup(
     description='Reusable extras for Django (the gravy).',
     long_description=README,
     author='greenbender',
+    author_email='byron.platt@gmail.com',
     url='https://github.com/greenbender/django-gravy',
     zip_safe=False,
     classifiers=[
