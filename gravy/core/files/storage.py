@@ -15,7 +15,7 @@ class HashedFileSystemStorage(FileSystemStorage):
     algorithm = 'sha1'
 
     def __init__(self, algorithm=None, *args, **kwargs):
-        if algorthim is not None:
+        if algorithm is not None:
             self.algorithm = algorithm
         super(HashedFileSystemStorage, self).__init__(*args, **kwargs)
 
