@@ -1,8 +1,10 @@
 from django import template
 from django.template.defaultfilters import pluralize
-from gravy.utils import seconds_to_units
+from ..utils import seconds_to_units
+
 
 register = template.Library()
+
 
 @register.filter
 def humanize_seconds(value):

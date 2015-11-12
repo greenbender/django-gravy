@@ -4,7 +4,7 @@ from django.utils.html import escape
 from django.utils import six
 from django.core.files import File
 from django.http import QueryDict
-from gravy.utils import datetime
+from ..utils import datetime
 from collections import OrderedDict
 import re
 

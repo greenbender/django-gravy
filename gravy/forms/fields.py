@@ -5,7 +5,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
-from gravy.utils import epoch
+from ..utils import epoch
 from .widgets import *
 from betterforms.forms import BetterForm, Fieldset
 from collections import OrderedDict
@@ -29,6 +29,7 @@ __all__ = [
     'fieldsetform_from_schema', 'fieldsetform_from_schemas', 'FormSchemaField',
     'FieldsetFormSchemaField',
 ]
+
 # proxy django.forms.fields
 import django.forms.fields
 __all__.extend(django.forms.fields.__all__)

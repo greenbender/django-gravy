@@ -14,6 +14,13 @@ setup(
     name='django-gravy',
     version='0.1',
     packages=find_packages(),
+
+    # only install the most common requirements
+    install_requires = [
+        'django>=1.7'
+        'django-betterforms',
+        'python-magic',
+    ],
     include_package_data=True,
     license='BSD License',
     description='Reusable extras for Django (the gravy).',

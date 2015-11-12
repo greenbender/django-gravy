@@ -4,8 +4,8 @@ from django.forms.fields import *
 from django.conf import settings
 from django.db.models.fields import TextField
 from django.utils import formats
-from gravy.forms.fields import SerializedDateTimeField
-from gravy.forms.widgets import SerializedDateTimeInput, NamedMultiWidget, SeparatedTextarea
+from .fields import SerializedDateTimeField
+from .widgets import SerializedDateTimeInput, NamedMultiWidget, SeparatedTextarea
 
 
 __all__ = [
@@ -175,6 +175,8 @@ class BootstrapDateRangePicker(NamedMultiWidget):
 
 
 # theme
+# XXX: it turns out this was a bad idea as it also modifies the admin
+# interface. Make BootstrapFormMixin and BootstrapModelFormMixin instead.
 _Textarea_render_original = Textarea.render
 def _Textarea_render(self, name, value, attrs=None):
     if attrs is None:
