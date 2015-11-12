@@ -1,4 +1,4 @@
-from django.template.base import Library, Node
+from django.template import Library, Node
 from django.conf import settings
 from bs4 import BeautifulSoup
 register = Library()
