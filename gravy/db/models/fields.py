@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.conf import settings
 
 from .registration import CurrentUserFieldRegistry
 
@@ -7,7 +8,7 @@ from .registration import CurrentUserFieldRegistry
 class CurrentUserField(models.ForeignKey):
 
     def __init__(self, auto_user=False, auto_user_add=False, **kwargs):
-        kwargs['to'] = User
+        kwargs['to'] = settings.AUTH_USER_MODEL
         kwargs.setdefault('null', True)
         kwargs.setdefault('editable', False)
         self.auto_user = auto_user
