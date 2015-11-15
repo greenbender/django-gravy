@@ -3,6 +3,7 @@ from django.forms.models import ModelMultipleChoiceField
 from django.core.files.storage import DefaultStorage
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
+from django.utils.html import format_html, mark_safe
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 from ..utils import epoch
@@ -165,7 +166,12 @@ class SchemaParseError(ValueError):
         if not self.details:
             return ''
         msg = self.details
-        return re.sub('(?m)\n *', lambda m: '<br>' + '&nbsp'*(len(m.group(0))-1), msg)
+        return re.sub('(?m)\n *',
+            lambda m: format_html('<br/>{}{}',
+                mark_safe('&nbsp;'*(len(m.group(0))-1)),
+                msg
+            )
+        )
 
 
 def validate_json(obj, schema, **kwargs):
