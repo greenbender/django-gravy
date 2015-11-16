@@ -150,7 +150,7 @@ class SeparatedCharField(SeparatedFieldMixin, CharField):
     widget = SeparatedTextInput
 
 
-class MultipleFileField(forms.FileField):
+class MultipleFileField(FileField):
     widget = MultipleFileInput
 
     def to_python(self, value):
