@@ -218,7 +218,7 @@ class MultipleFileInput(FileInput):
 
     def render(self, name, value, attrs=None):
         attrs['multiple'] = 'multiple'
-        return super(MultiFileInput, self).render(name, value, attrs)
+        return super(MultipleFileInput, self).render(name, value, attrs)
 
     def value_from_datadict(self, data, files, name):
         if hasattr(files, 'getlist'):
