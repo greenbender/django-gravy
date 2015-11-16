@@ -25,10 +25,10 @@ __all__ = [
     'NamedMultiValueField', 'RepeatNamedMultiValueField', 'SavedFileField',
     'SerializedDateTimeField', 'SerializedModelMultipleChoiceField',
     'SeparatedFieldMixin', 'SeparatedCharField', 'FilePermissionsField',
-    'SchemaParseError', 'validate_json', 'FormGenerator', 'normalise_schema',
-    'form_from_schema', 'FieldsetMixin', 'FieldsetFormGenerator',
-    'fieldsetform_from_schema', 'fieldsetform_from_schemas', 'FormSchemaField',
-    'FieldsetFormSchemaField',
+    'MulitpleFileField', 'SchemaParseError', 'validate_json', 'FormGenerator',
+    'normalise_schema', 'form_from_schema', 'FieldsetMixin',
+    'FieldsetFormGenerator', 'fieldsetform_from_schema',
+    'fieldsetform_from_schemas', 'FormSchemaField', 'FieldsetFormSchemaField',
 ]
 
 # proxy django.forms.fields
@@ -148,6 +148,13 @@ class SeparatedFieldMixin(object):
 # TODO: add validation that it is a list etc
 class SeparatedCharField(SeparatedFieldMixin, CharField):
     widget = SeparatedTextInput
+
+
+class MultipleFileField(forms.FileField):
+    widget = MultipleFileInput
+
+    def to_python(self, value):
+        return [super(MultipleFileField, self).to_python(v) for v in value]
 
 
 class SchemaParseError(ValueError):

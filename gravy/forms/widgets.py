@@ -15,7 +15,8 @@ log = logging.getLogger('gravy.forms.widgets')
 
 __all__ = [
     'NamedMultiWidget', 'RepeatNamedMultiWidget', 'SeparatedWidgetMixin',
-    'SeparatedTextInput', 'SeparatedTextarea', 'SerializedDateTimeInput'
+    'SeparatedTextInput', 'SeparatedTextarea', 'SerializedDateTimeInput',
+    'MultipleFileInput',
 ]
 # proxy django.forms.widgets
 import django.forms.widgets
@@ -211,3 +212,20 @@ class SerializedDateTimeInput(DateTimeInput):
         if isinstance(value, six.integer_types):
             value = datetime(value)
         return super(SerializedDateTimeInput, self)._format_value(value)
+
+
+class MultipleFileInput(FileInput):
+
+    def render(self, name, value, attrs=None):
+        attrs['multiple'] = 'multiple'
+        return super(MultiFileInput, self).render(name, value, attrs)
+
+    def value_from_datadict(self, data, files, name):
+        if hasattr(files, 'getlist'):
+            return files.getlist(name)
+        else:
+            value = files.get(name)
+            if isinstance(value, list):
+                return value
+            else:
+                return [value]
