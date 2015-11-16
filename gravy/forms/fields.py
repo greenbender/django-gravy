@@ -3,7 +3,7 @@ from django.forms.models import ModelMultipleChoiceField
 from django.core.files.storage import DefaultStorage
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
-from django.utils.html import format_html, mark_safe
+from django.utils.html import format_html
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 from ..utils import epoch
@@ -156,22 +156,16 @@ class SchemaParseError(ValueError):
         self.context = context
 
     @property
-    def details(self):
-        if not self.context:
+    def schema(self):
+        if self.context is None:
             return ''
+        if isinstance(self.context, six.string_types):
+            return self.context
         return json.dumps(self.context, indent=4)
 
     @property
-    def details_html(self):
-        if not self.details:
-            return ''
-        msg = self.details
-        return re.sub('(?m)\n *',
-            lambda m: format_html('<br/>{}{}',
-                mark_safe('&nbsp;'*(len(m.group(0))-1)),
-                msg
-            )
-        )
+    def html(self):
+        return format_html('{}<br><pre>{}</pre>', self.message, self.schema)
 
 
 def validate_json(obj, schema, **kwargs):
@@ -468,16 +462,12 @@ class FormGenerator(object):
 
 def normalise_schema(schema):
     if hasattr(schema, 'read'):
-        try:
-            normalised_schema = json.load(schema)
-        except ValueError as e:
-            raise SchemaParseError(e)
-        return normalised_schema
-    elif isinstance(schema, six.string_types):
+        schema = schema.read()
+    if isinstance(schema, six.string_types):
         try:
             normalised_schema = json.loads(schema)
         except ValueError as e:
-            raise SchemaParseError(e)
+            raise SchemaParseError(e, schema)
         return normalised_schema
     # since the schema may be modified we need a copy
     return copy.deepcopy(schema)
@@ -672,7 +662,7 @@ class FormSchemaField(CharField):
     """
     widget = Textarea
     default_error_messages = {
-        'invalid': _('Not a valid schema: %(details)s')
+        'invalid': _('Not a valid schema: %(schema)s')
     }
     generator_class = FormGenerator
 
@@ -692,7 +682,7 @@ class FormSchemaField(CharField):
         try:
             return self.get_form(value)
         except SchemaParseError as e:
-            raise ValidationError(self.error_messages['invalid'], code='invalid', params={'details': e.details})
+            raise ValidationError(self.error_messages['invalid'], code='invalid', params={'schema': e.schema})
 
 
 class FieldsetFormSchemaField(FormSchemaField):
