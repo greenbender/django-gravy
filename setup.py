@@ -17,7 +17,6 @@ setup(
 
     # only install the most common requirements
     install_requires = [
-        'django>=1.7'
         'django-betterforms',
         'python-magic',
     ],
