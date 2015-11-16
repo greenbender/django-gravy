@@ -7,7 +7,7 @@
             return '';
         if (i.files.length == 1)
             return i.files[0].name;
-        return i.files.length + 'files selected';
+        return i.files.length + ' files selected';
     };
 
 
