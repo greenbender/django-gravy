@@ -174,8 +174,12 @@ class BootstrapDateRangePicker(NamedMultiWidget):
         return div.format(output, btn_group)
 
 
-class BootstrapMultipleFileInput(FormControlMixin, BootstrapMixin, MultipleFileInput):
-    pass
+class BootstrapMultipleFileInput(OptionalMixin, FormControlMixin, BootstrapMixin, MultipleFileInput):
+    toggle = 'fileInput'
+
+    class Media:
+        css = {'all': ('css/bootstrap.fileInput.css',)}
+        js = ('js/bootstrap.fileInput.js',)
 
 
 # theme
