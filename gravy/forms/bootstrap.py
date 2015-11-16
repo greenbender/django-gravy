@@ -4,8 +4,8 @@ from django.forms.fields import *
 from django.conf import settings
 from django.db.models.fields import TextField
 from django.utils import formats
-from .fields import SerializedDateTimeField
-from .widgets import SerializedDateTimeInput, NamedMultiWidget, SeparatedTextarea
+from .fields import SerializedDateTimeField, MultipleFileField
+from .widgets import SerializedDateTimeInput, NamedMultiWidget, SeparatedTextarea, MultipleFileInput
 
 
 __all__ = [
@@ -13,7 +13,7 @@ __all__ = [
     'BootstrapSelect', 'BootstrapDateTimePicker',
     'BootstrapSerializedDateTimePicker', 'BootstrapFileInput',
     'BootstrapCheckboxToggle', 'BootstrapCombobox', 'BootstrapDateRangePicker',
-    'BootstrapSeparatedTextarea',
+    'BootstrapSeparatedTextarea', 'BootstrapMultipleFileInput',
 ]
 
 
@@ -174,6 +174,10 @@ class BootstrapDateRangePicker(NamedMultiWidget):
         return div.format(output, btn_group)
 
 
+class BootstrapMultipleFileInput(FormControlMixin, BootstrapMixin, MultipleFileInput):
+    pass
+
+
 # theme
 # XXX: it turns out this was a bad idea as it also modifies the admin
 # interface. Make BootstrapFormMixin and BootstrapModelFormMixin instead.
@@ -194,6 +198,7 @@ def apply_theme():
     IntegerField.widget = BootstrapNumberInput
     ChoiceField.widget = BootstrapSelect
     FileField.widget = BootstrapFileInput
+    MultipleFileField.widget = BootstrapMultipleFileInput
     DateTimeField.widget = BootstrapDateTimePicker
     SerializedDateTimeField.widget = BootstrapSerializedDateTimePicker
     ModelMultipleChoiceField.widget = BootstrapSelectMultiple
