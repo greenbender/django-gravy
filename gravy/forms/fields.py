@@ -25,7 +25,7 @@ __all__ = [
     'NamedMultiValueField', 'RepeatNamedMultiValueField', 'SavedFileField',
     'SerializedDateTimeField', 'SerializedModelMultipleChoiceField',
     'SeparatedFieldMixin', 'SeparatedCharField', 'FilePermissionsField',
-    'MulitpleFileField', 'SchemaParseError', 'validate_json', 'FormGenerator',
+    'MultipleFileField', 'SchemaParseError', 'validate_json', 'FormGenerator',
     'normalise_schema', 'form_from_schema', 'FieldsetMixin',
     'FieldsetFormGenerator', 'fieldsetform_from_schema',
     'fieldsetform_from_schemas', 'FormSchemaField', 'FieldsetFormSchemaField',
