@@ -91,7 +91,8 @@ class Decompress(object):
                 self.__block_length = unpack(_BLOCK_HEADER_FORMAT, header)[0]
                 self.__block_compressed = self.__block_length & 0x8000
                 self.__block_length ^= self.__block_compressed
-                self.state = self.STATE_BLOCK
+                if self__block_length:
+                    self.state = self.STATE_BLOCK
 
             # block
             if self.state == self.STATE_BLOCK:
