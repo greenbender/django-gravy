@@ -4,13 +4,13 @@ from django.forms.fields import *
 from django.conf import settings
 from django.db.models.fields import TextField
 from django.utils import formats
-from .fields import SerializedDateTimeField, MultipleFileField
-from .widgets import SerializedDateTimeInput, NamedMultiWidget, SeparatedTextarea, MultipleFileInput
+from .fields import *
+from .widgets import *
 
 
 __all__ = [
     'BootstrapTextInput', 'BootstrapTextarea', 'BootstrapNumberInput',
-    'BootstrapSelect', 'BootstrapDateTimePicker',
+    'BootstrapSelect', 'BootstrapSeparatedSelect', 'BootstrapDateTimePicker',
     'BootstrapSerializedDateTimePicker', 'BootstrapFileInput',
     'BootstrapCheckboxToggle', 'BootstrapCombobox', 'BootstrapDateRangePicker',
     'BootstrapSeparatedTextarea', 'BootstrapMultipleFileInput',
@@ -64,6 +64,10 @@ class BootstrapSelect(FormControlMixin, BootstrapMixin, Select):
 
 
 class BootstrapSelectMultiple(FormControlMixin, BootstrapMixin, SelectMultiple):
+    pass
+
+
+class BootstrapSeparatedSelect(FormControlMixin, BootstrapMixin, SeparatedSelect):
     pass
 
 
@@ -206,6 +210,7 @@ def apply_theme():
     DateTimeField.widget = BootstrapDateTimePicker
     SerializedDateTimeField.widget = BootstrapSerializedDateTimePicker
     ModelMultipleChoiceField.widget = BootstrapSelectMultiple
+    SeparatedChoiceField.widget = BootstrapSeparatedSelect
     Textarea.render = _Textarea_render
 
 

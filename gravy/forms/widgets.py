@@ -15,8 +15,8 @@ log = logging.getLogger('gravy.forms.widgets')
 
 __all__ = [
     'NamedMultiWidget', 'RepeatNamedMultiWidget', 'SeparatedWidgetMixin',
-    'SeparatedTextInput', 'SeparatedTextarea', 'SerializedDateTimeInput',
-    'MultipleFileInput',
+    'SeparatedSelect', 'SeparatedTextInput', 'SeparatedTextarea',
+    'SerializedDateTimeInput', 'MultipleFileInput',
 ]
 # proxy django.forms.widgets
 import django.forms.widgets
@@ -178,15 +178,15 @@ class RepeatNamedMultiWidget(NamedMultiWidget):
 
 class SeparatedWidgetMixin(object):
 
-    def __init__(self, attrs=None, token=',', cleanup=True):
+    def __init__(self, attrs=None, token=',', cleanup=True, **kwargs):
         self.token = token
         self.cleanup = cleanup
-        super(SeparatedWidgetMixin, self).__init__(attrs=attrs)
+        super(SeparatedWidgetMixin, self).__init__(attrs=attrs, **kwargs)
 
-    def render(self, name, value, attrs=None):
+    def render(self, name, value, attrs=None, **kwargs):
         if isinstance(value, list):
             value = self.token.join([unicode(v) for v in value])
-        return super(SeparatedWidgetMixin, self).render(name, value, attrs=attrs)
+        return super(SeparatedWidgetMixin, self).render(name, value, attrs=attrs, **kwargs)
 
     def value_from_datadict(self, data, files, name):
         value = super(SeparatedWidgetMixin, self).value_from_datadict(data, files, name)
@@ -196,6 +196,20 @@ class SeparatedWidgetMixin(object):
         if self.cleanup:
             values = filter(bool, [v.strip() for v in values])
         return values
+
+
+class SeparatedSelect(SeparatedWidgetMixin, Select):
+
+    def _collapse_choices(self, choices):
+        for choice in choices:
+            if isinstance(choice[0], list):
+                choice = (self.token.join([unicode(c) for c in choice[0]]), choice[1])
+            yield choice
+
+    def render(self, name, value, attrs=None, choices=()):
+        choices = list(self._collapse_choices(choices))
+        self.choices = list(self._collapse_choices(self.choices))
+        return super(SeparatedSelect, self).render(name, value, attrs=attrs, choices=choices)
 
 
 class SeparatedTextInput(SeparatedWidgetMixin, TextInput):

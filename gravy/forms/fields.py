@@ -24,10 +24,10 @@ log = logging.getLogger('gravy.forms.fields')
 __all__ = [
     'NamedMultiValueField', 'RepeatNamedMultiValueField', 'SavedFileField',
     'SerializedDateTimeField', 'SerializedModelMultipleChoiceField',
-    'SeparatedFieldMixin', 'SeparatedCharField', 'FilePermissionsField',
-    'MultipleFileField', 'SchemaParseError', 'validate_json', 'FormGenerator',
-    'normalise_schema', 'form_from_schema', 'FieldsetMixin',
-    'FieldsetFormGenerator', 'fieldsetform_from_schema',
+    'SeparatedFieldMixin', 'SeparatedChoiceField', 'SeparatedCharField',
+    'FilePermissionsField', 'MultipleFileField', 'SchemaParseError',
+    'validate_json', 'FormGenerator', 'normalise_schema', 'form_from_schema',
+    'FieldsetMixin', 'FieldsetFormGenerator', 'fieldsetform_from_schema',
     'fieldsetform_from_schemas', 'FormSchemaField', 'FieldsetFormSchemaField',
 ]
 
@@ -143,6 +143,10 @@ class SeparatedFieldMixin(object):
         if isinstance(value, list):
             return [super(SeparatedFieldMixin, self).to_python(v) for v in value]
         return super(SeparatedFieldMixin, self).to_python(value)
+
+
+class SeparatedChoiceField(SeparatedFieldMixin, ChoiceField):
+    widget = SeparatedSelect
 
 
 # TODO: add validation that it is a list etc
@@ -402,6 +406,35 @@ class FormGenerator(object):
                         'properties': {
                             'name': {'type': 'string'},
                             'value': {},
+                        }, 'required': ['name', 'value']
+                    }
+                }
+            }, 'required': ['type', 'choices']
+        }
+        validate_json(field, schema)
+        sentinel = object()
+        initial = field.get('initial', sentinel)
+        if initial is not sentinel and initial not in [c['value'] for c in field['choices']]:
+            raise SchemaParseError('initial must match one of the values given in choices.', field)
+
+    @staticmethod
+    def create_field_for_selectlist(field, options):
+        options['choices'] = [(c['value'], c['name']) for c in field['choices']]
+        return SeparatedChoiceField(**options)
+
+    @staticmethod
+    def validate_field_for_selectlist(field, options):
+        schema = {
+            'type': 'object',
+            'properties': {
+                'type': {'enum': ['selectlist']},
+                'choices': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'object',
+                        'properties': {
+                            'name': {'type': 'string'},
+                            'value': {'type': 'array'},
                         }, 'required': ['name', 'value']
                     }
                 }
