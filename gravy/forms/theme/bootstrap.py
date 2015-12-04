@@ -4,8 +4,9 @@ from django.forms.fields import *
 from django.conf import settings
 from django.db.models.fields import TextField
 from django.utils import formats
-from .fields import *
-from .widgets import *
+from ..fields import *
+from ..widgets import *
+from .base import Theme
 
 
 __all__ = [
@@ -14,6 +15,7 @@ __all__ = [
     'BootstrapSerializedDateTimePicker', 'BootstrapFileInput',
     'BootstrapCheckboxToggle', 'BootstrapCombobox', 'BootstrapDateRangePicker',
     'BootstrapSeparatedTextarea', 'BootstrapMultipleFileInput',
+    'BootstrapTheme',
 ]
 
 
@@ -186,33 +188,36 @@ class BootstrapMultipleFileInput(OptionalMixin, FormControlMixin, BootstrapMixin
         js = ('js/bootstrap.fileInput.js',)
 
 
-# theme
-# XXX: it turns out this was a bad idea as it also modifies the admin
+# XXX: It turns out this was a bad idea as it also modifies the admin
 # interface. Make BootstrapFormMixin and BootstrapModelFormMixin instead.
-_Textarea_render_original = Textarea.render
-def _Textarea_render(self, name, value, attrs=None):
-    if attrs is None:
-        attrs = {}
-    if 'class' in attrs:
-        attrs['class'] += ' form-control'
-    else:
-        attrs['class'] = 'form-control'
-    return _Textarea_render_original(self, name, value, attrs=attrs) 
+# update: I played around with fixing this but it turns out to be quit a bit
+# of work to get it to work correctly ... try again later ... i guess.
+class BootstrapTheme(Theme):
+    widget_map = (
+        (CharField, BootstrapTextInput),
+        (BooleanField, BootstrapCheckboxToggle),
+        (IntegerField, BootstrapNumberInput),
+        (ChoiceField, BootstrapSelect),
+        (FileField, BootstrapFileInput),
+        (MultipleFileField, BootstrapMultipleFileInput),
+        (DateTimeField, BootstrapDateTimePicker),
+        (SerializedDateTimeField, BootstrapSerializedDateTimePicker),
+        (ModelMultipleChoiceField, BootstrapSelectMultiple),
+        (SeparatedChoiceField, BootstrapSeparatedSelect),
+    )
 
+    @classmethod
+    def apply_theme(cls):
+        super(BootstrapTheme, cls).apply_theme()
 
-def apply_theme():
-    CharField.widget = BootstrapTextInput
-    BooleanField.widget = BootstrapCheckboxToggle
-    IntegerField.widget = BootstrapNumberInput
-    ChoiceField.widget = BootstrapSelect
-    FileField.widget = BootstrapFileInput
-    MultipleFileField.widget = BootstrapMultipleFileInput
-    DateTimeField.widget = BootstrapDateTimePicker
-    SerializedDateTimeField.widget = BootstrapSerializedDateTimePicker
-    ModelMultipleChoiceField.widget = BootstrapSelectMultiple
-    SeparatedChoiceField.widget = BootstrapSeparatedSelect
-    Textarea.render = _Textarea_render
-
-
-if getattr(settings, 'FORMS_THEME', None) == 'bootstrap':
-    apply_theme()
+        # Textarea requires special attention
+        _Textarea_render_original = Textarea.render
+        def _Textarea_render(self, name, value, attrs=None):
+            if attrs is None:
+                attrs = {}
+            if 'class' in attrs:
+                attrs['class'] += ' form-control'
+            else:
+                attrs['class'] = 'form-control'
+            return _Textarea_render_original(self, name, value, attrs=attrs)
+        Textarea.render = _Textarea_render
