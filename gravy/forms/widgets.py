@@ -6,6 +6,7 @@ from django.core.files import File
 from django.http import QueryDict
 from ..utils import datetime
 from collections import OrderedDict
+import urlparse
 import re
 
 
@@ -14,9 +15,9 @@ log = logging.getLogger('gravy.forms.widgets')
 
 
 __all__ = [
-    'NamedMultiWidget', 'RepeatNamedMultiWidget', 'SeparatedWidgetMixin',
-    'SeparatedSelect', 'SeparatedTextInput', 'SeparatedTextarea',
-    'SerializedDateTimeInput', 'MultipleFileInput',
+    'NamedMultiWidget', 'RepeatNamedMultiWidget', 'ParsedURLInput',
+    'SeparatedWidgetMixin', 'SeparatedSelect', 'SeparatedTextInput',
+    'SeparatedTextarea', 'SerializedDateTimeInput', 'MultipleFileInput',
 ]
 # proxy django.forms.widgets
 import django.forms.widgets
@@ -174,6 +175,14 @@ class RepeatNamedMultiWidget(NamedMultiWidget):
             toggle=self.toggle, id=id_, template=template,
             subwidgets=''.join(rendered)
         )
+
+
+class ParsedURLInput(URLInput):
+
+    def render(self, name, value, attrs=None):
+        if isinstance(value, dict):
+            value = urlparse.urlunsplit(value.values()[:5])
+        return super(ParsedURLInput, self).render(name, value, attrs=attrs)
 
 
 class SeparatedWidgetMixin(object):

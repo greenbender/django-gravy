@@ -10,6 +10,7 @@ from ..utils import epoch
 from .widgets import *
 from betterforms.forms import BetterForm, Fieldset
 from collections import OrderedDict
+import urlparse
 import jsonschema
 import json
 import copy
@@ -23,11 +24,12 @@ log = logging.getLogger('gravy.forms.fields')
 
 __all__ = [
     'NamedMultiValueField', 'RepeatNamedMultiValueField', 'SavedFileField',
-    'SerializedDateTimeField', 'SerializedModelMultipleChoiceField',
-    'SeparatedFieldMixin', 'SeparatedChoiceField', 'SeparatedCharField',
-    'FilePermissionsField', 'MultipleFileField', 'SchemaParseError',
-    'validate_json', 'FormGenerator', 'normalise_schema', 'form_from_schema',
-    'FieldsetMixin', 'FieldsetFormGenerator', 'fieldsetform_from_schema',
+    'ParsedURLField', 'SerializedDateTimeField',
+    'SerializedModelMultipleChoiceField', 'SeparatedFieldMixin',
+    'SeparatedChoiceField', 'SeparatedCharField', 'FilePermissionsField',
+    'MultipleFileField', 'SchemaParseError', 'validate_json', 'FormGenerator',
+    'normalise_schema', 'form_from_schema', 'FieldsetMixin',
+    'FieldsetFormGenerator', 'fieldsetform_from_schema',
     'fieldsetform_from_schemas', 'FormSchemaField', 'FieldsetFormSchemaField',
 ]
 
@@ -135,6 +137,36 @@ class FilePermissionsField(CharField):
             value = int(value, 0)
         except (ValueError, TypeError):
             raise ValidationError(self.error_messages['invalid'], code='invalid')
+        return value
+
+
+class ParsedURLField(URLField):
+    widget = ParsedURLInput
+    attribute_map = (
+        'scheme',
+        'netloc',
+        'path',
+        'query',
+        'fragment',
+        'username',
+        'password',
+        'hostname',
+        'port'
+    )
+    default_ports = {
+        'http': 80,
+        'https': 443,
+    }
+
+    def clean(self, value):
+        value = super(ParsedURLField, self).clean(value)
+        if value:
+            # we know is it sane because URLField says so
+            split = urlparse.urlsplit(value)
+            value = dict([(n, getattr(split, n, None)) for n in self.attribute_map])
+            # always try to set the port
+            if value['port'] is None:
+                value['port'] = self.default_ports.get(value['scheme'])
         return value
 
 
@@ -498,6 +530,23 @@ class FormGenerator(object):
         validate_json(field, schema)
         for subfield in field['fields']:
             cls.validate_field(subfield)
+
+    @staticmethod
+    def create_field_for_url(field, options):
+        options['max_length'] = field.get('max_length', 4096)
+        return ParsedURLField(**options)
+
+    @staticmethod
+    def validate_field_for_url(field, options):
+        schema = {
+            'type': 'object',
+            'properties': {
+                'type': {'enum': ['url']},
+                'initial': {'type': 'string'},
+                'max_length': {'type': 'integer', 'minimum': 0}
+            }, 'required': ['type']
+        }
+        validate_json(field, schema)
 
 
 def normalise_schema(schema):

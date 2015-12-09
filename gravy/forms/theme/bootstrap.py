@@ -69,6 +69,14 @@ class BootstrapSelectMultiple(FormControlMixin, BootstrapMixin, SelectMultiple):
     pass
 
 
+class BootstrapURLInput(OptionalMixin, FormControlMixin, BootstrapMixin, URLInput):
+    pass
+
+
+class BootstrapParsedURLInput(OptionalMixin, FormControlMixin, BootstrapMixin, ParsedURLInput):
+    pass
+
+
 class BootstrapSeparatedSelect(FormControlMixin, BootstrapMixin, SeparatedSelect):
     pass
 
@@ -204,6 +212,8 @@ class BootstrapTheme(Theme):
         (SerializedDateTimeField, BootstrapSerializedDateTimePicker),
         (ModelMultipleChoiceField, BootstrapSelectMultiple),
         (SeparatedChoiceField, BootstrapSeparatedSelect),
+        (URLField, BootstrapURLInput),
+        (ParsedURLField, BootstrapParsedURLInput),
     )
 
     @classmethod
