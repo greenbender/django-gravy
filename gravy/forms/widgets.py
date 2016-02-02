@@ -178,10 +178,18 @@ class RepeatNamedMultiWidget(NamedMultiWidget):
 
 
 class ParsedURLInput(URLInput):
+    attribute_map = (
+        'scheme',
+        'netloc',
+        'path',
+        'query',
+        'fragment',
+    )
 
     def render(self, name, value, attrs=None):
         if isinstance(value, dict):
-            value = urlparse.urlunsplit(value.values()[:5])
+            split = [value.get(n) for n in self.attribute_map]
+            value = urlparse.urlunsplit(split)
         return super(ParsedURLInput, self).render(name, value, attrs=attrs)
 
 

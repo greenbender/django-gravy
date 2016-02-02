@@ -167,6 +167,13 @@ class ParsedURLField(URLField):
             # always try to set the port
             if value['port'] is None:
                 value['port'] = self.default_ports.get(value['scheme'])
+            # add a full path - since its useful
+            fullpath = value['path']
+            if value['query']:
+                fullpath += '?' + value['query']
+            fullpath += value['fragment']
+            value['fullpath'] = fullpath
+            log.debug(value)
         return value
 
 
