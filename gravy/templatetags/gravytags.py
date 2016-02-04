@@ -69,7 +69,6 @@ def prettyhtml(parser, token):
 
 @register.simple_tag(takes_context=True)
 def url_replace(context, **kwargs):
-    log.debug(kwargs)
     dict_ = context['request'].GET.copy()
     for name, value in six.iteritems(kwargs):
         if value is None:
