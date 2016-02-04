@@ -64,3 +64,16 @@ def prettyhtml(parser, token):
     nodelist = parser.parse(('endprettyhtml',))
     parser.delete_first_token()
     return PrettyHtmlNode(nodelist)
+
+
+@register.tag(takes_context=True)
+def url_replace(context, **kwargs):
+    log.debug(kwargs)
+    dict_ = context['request'].GET.copy()
+    for name, value in six.iteritems(kwargs):
+        if value is None:
+            if name in dict_:
+                dict_.pop(name)
+        else:
+            dict_[name] = value
+    return dict_.urlencode()
