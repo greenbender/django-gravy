@@ -1,5 +1,6 @@
 from django.template import Library, Node
 from django.conf import settings
+from django.utils import six
 from bs4 import BeautifulSoup
 register = Library()
 
