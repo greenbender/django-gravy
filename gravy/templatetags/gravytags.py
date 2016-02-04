@@ -66,7 +66,7 @@ def prettyhtml(parser, token):
     return PrettyHtmlNode(nodelist)
 
 
-@register.simpletag(takes_context=True)
+@register.simple_tag(takes_context=True)
 def url_replace(context, **kwargs):
     log.debug(kwargs)
     dict_ = context['request'].GET.copy()
