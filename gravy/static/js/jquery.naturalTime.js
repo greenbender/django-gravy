@@ -1,95 +1,110 @@
-(function($) {
+;(function($, window, document, undefined) {
 
-    var locales = {
-        'en': {
-            relativeTime: {
-                future: 'in %s',
-                past:   '%s ago',
-                s:  '%d seconds',
-                m:  'a minute',
-                mm: '%d minutes',
-                h:  'an hour',
-                hh: '%d hours',
-                d:  'a day',
-                dd: '%d days',
-                M:  'a month',
-                MM: '%d months',
-                y:  'a year',
-                yy: '%d years'
-            },
+    var pluginName = 'naturalTime',
+        defaults = {
+            locale: 'en',
+            interval: 1
         },
-        'en-deadline': {
-            relativeTime: {
-                future: 'in %s',
-                past:   '%s overdue',
-                s:  '%d seconds',
-                m:  'a minute',
-                mm: '%d minutes',
-                h:  'an hour',
-                hh: '%d hours',
-                d:  'a day',
-                dd: '%d days',
-                M:  'a month',
-                MM: '%d months',
-                y:  'a year',
-                yy: '%d years'
-            }
-        }
-    };
-
-    $.each(locales, moment.locale);
-
-    var defaults = {
-        locale: 'en',
-        interval: 1
-    };
-
-    var humanize = function(elem) {
-        var then = elem.data('then');
-        if (!then)
-            return;
-        var human = then.fromNow();
-        if (elem.text() == human)
-            return;
-        elem.text(human);
-    }
-
-    var update = function(elem, value, locale) {
-        var then = moment.utc(value * 1000).locale(locale);
-        elem.data('then', then);
-    };
-
-    $.fn.extend({
-
-        naturalTime: function(options) {
-
-            this.each(function() {
-
-                var elem = $(this);
-                var options = $.extend({}, defaults, options, elem.data());
-                options.interval *= 1000;
-
-                // initial update 
-                if ($.isNumeric(elem.text())) {
-                    update(elem, elem.text(), options.locale);
-                    humanize(elem);
+        locales = {
+            'en': {
+                relativeTime: {
+                    future: 'in %s',
+                    past:   '%s ago',
+                    s:  '%d seconds',
+                    m:  'a minute',
+                    mm: '%d minutes',
+                    h:  'an hour',
+                    hh: '%d hours',
+                    d:  'a day',
+                    dd: '%d days',
+                    M:  'a month',
+                    MM: '%d months',
+                    y:  'a year',
+                    yy: '%d years'
+                },
+            },
+            'en-deadline': {
+                relativeTime: {
+                    future: 'in %s',
+                    past:   '%s overdue',
+                    s:  '%d seconds',
+                    m:  'a minute',
+                    mm: '%d minutes',
+                    h:  'an hour',
+                    hh: '%d hours',
+                    d:  'a day',
+                    dd: '%d days',
+                    M:  'a month',
+                    MM: '%d months',
+                    y:  'a year',
+                    yy: '%d years'
                 }
+            }
+        };
 
-                // update on ws.update
-                elem.on('ws.update', function(e) {
-                    update(elem, e.value, options.locale);
-                });
+     /* add locales to moment */
+     $.each(locales, moment.locale);
 
-                // polling update
-                setInterval(function() {humanize(elem);}, options.interval);
+    var NaturalTime = function(element, options) {
+        this.element = element;
+        this.options = $.extend({}, defaults, options, $(element).data());
+        this.options.interval *= 1000;
+        this.init();
+    };
 
-            });
+    NaturalTime.prototype = {
+
+        init: function() {
+            this.$element = $(this.element);
+            
+            /* set initial value */
+            var value = this.$element.text();
+            if ($.isNumeric(value))
+                this.update(value);
+
+            this.initEvents();
+            this.poll();
 
             return this;
+        },
+
+        initEvents: function() {
+            this.$element.on('ws.update', $.proxy(this.update, this));
+        },
+        
+        update: function(value) {
+            if (!$.isNumeric(value))
+                value = value.valuel
+            this.then = moment.utc(value * 1000).locale(this.options.locale);
+        },
+
+        humanize: function() {
+            if (!this.then)
+                return;
+            var human = this.then.fromNow();
+            if (this.$element.text() == human)
+                return;
+            this.$element.text(human);
+        },
+
+        poll: function() {
+            this.humanize();
+
+            /* only continue to poll if we are in the DOM */
+            if ($.contains(document.documentElement, this.element))
+                setTimeout($.proxy(this.poll, this), this.options.interval);
         }
 
-    });
+    };
 
-    $('[data-toggle="naturalTime"]').naturalTime();
+    $.fn[pluginName] = function(options) {
+        return this.each(function() {
+            if (!$.data(this, pluginName)) {
+                $.data(this, pluginName, new NaturalTime(this, options));
+            }
+        });
+    };
 
-})(jQuery);
+    $('[data-toggle="' + pluginName + '"]')[pluginName]();
+
+})(jQuery, window, document);
