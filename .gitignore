@@ -1,3 +1,4 @@
+.*.sw?
 /dist
 /build
 /django_gravy.egg-info
