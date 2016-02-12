@@ -1,6 +1,7 @@
 from django.forms.widgets import *
 from django.utils.safestring import mark_safe
-from django.utils.html import escape
+from django.utils.html import escape, format_html
+from django.forms.utils import flatatt
 from django.utils import six
 from django.core.files import File
 from django.http import QueryDict
@@ -18,6 +19,7 @@ __all__ = [
     'NamedMultiWidget', 'RepeatNamedMultiWidget', 'ParsedURLInput',
     'SeparatedWidgetMixin', 'SeparatedSelect', 'SeparatedTextInput',
     'SeparatedTextarea', 'SerializedDateTimeInput', 'MultipleFileInput',
+    'DateTimeRangeInput',
 ]
 # proxy django.forms.widgets
 import django.forms.widgets
@@ -75,12 +77,12 @@ class NamedMultiWidget(MultiWidget):
         return value
 
     def format_output(self, rendered_widgets, attrs=None):
+        final_attrs = {
+            'class': 'named-multi-widget'
+        }
         id_ = attrs.get('id')
-        id_ = ' id="{0}"'.format(id_) if id_ else ''
-        ul = '<ul{0} class="named-multi-widget">{2}{1}</ul>'
-        li = '<li>{0}{1}</li>'
-        title = ' title="{0}"'
-        label = '<label{1}>{0}</label>'
+        if id_:
+            final_attrs['id'] = id_
         rendered = []
         hidden = []
         for i, subwidget in enumerate(self.named_widgets.items()):
@@ -88,12 +90,19 @@ class NamedMultiWidget(MultiWidget):
             if widget.is_hidden:
                 hidden.append(rendered_widgets[i])
             else:
-                t = self._help_texts.get(widget_name)
-                t = title.format(t) if t else ''
-                l = self._labels.get(widget_name)
-                l = label.format(l, t) if l else ''
-                rendered.append(li.format(l, rendered_widgets[i]))
-        return ul.format(id_, ''.join(rendered), ''.join(hidden))
+                label = self._labels.get(widget_name, '')
+                if label:
+                    label_attrs = {}
+                    title = self._help_texts.get(widget_name)
+                    if title:
+                        label_attrs['title'] = title
+                    label = format_html('<label {}>{}</label>', flatatt(label_attrs), label)
+                rendered.append(format_html('<li>{}{}</li>', label, rendered_widgets[i]))
+        return format_html('<ul {}>{}{}</ul>',
+            flatatt(final_attrs),
+            mark_safe(''.join(hidden)),
+            mark_safe(''.join(rendered))
+        )
 
     def decompress(self, value):
         if value:
@@ -260,3 +269,7 @@ class MultipleFileInput(FileInput):
                 return value
             else:
                 return [value]
+
+
+class DateTimeRangeInput(NamedMultiWidget):
+    pass

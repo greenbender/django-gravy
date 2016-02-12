@@ -27,10 +27,11 @@ __all__ = [
     'ParsedURLField', 'SerializedDateTimeField',
     'SerializedModelMultipleChoiceField', 'SeparatedFieldMixin',
     'SeparatedChoiceField', 'SeparatedCharField', 'FilePermissionsField',
-    'MultipleFileField', 'SchemaParseError', 'validate_json', 'FormGenerator',
-    'normalise_schema', 'form_from_schema', 'FieldsetMixin',
-    'FieldsetFormGenerator', 'fieldsetform_from_schema',
-    'fieldsetform_from_schemas', 'FormSchemaField', 'FieldsetFormSchemaField',
+    'DateTimeRangeField', 'SerializedDateTimeRangeField', 'MultipleFileField',
+    'SchemaParseError', 'validate_json', 'FormGenerator', 'normalise_schema',
+    'form_from_schema', 'FieldsetMixin', 'FieldsetFormGenerator',
+    'fieldsetform_from_schema', 'fieldsetform_from_schemas', 'FormSchemaField',
+    'FieldsetFormSchemaField',
 ]
 
 # proxy django.forms.fields
@@ -46,7 +47,7 @@ class NamedMultiValueField(MultiValueField):
     widget = NamedMultiWidget
     fields = ()
 
-    def __init__(self, widget=None, fields=None, *args, **kwargs):
+    def __init__(self, fields=None, widget_kwargs=None, *args, **kwargs):
         kwargs.setdefault('require_all_fields', False)
         self.named_fields = OrderedDict(fields or self.fields)
         widgets, initial, help_texts, labels = OrderedDict(), {}, {}, {}
@@ -58,7 +59,15 @@ class NamedMultiValueField(MultiValueField):
                 labels[name] = field.label
             if hasattr(field, 'help_text'):
                 help_texts[name] = field.help_text
-        widget = self.widget(widgets=widgets, labels=labels, help_texts=help_texts, initial=initial)
+        if widget_kwargs is None:
+            widget_kwargs = {}
+        widget = self.widget(
+            widgets=widgets,
+            labels=labels,
+            help_texts=help_texts,
+            initial=initial,
+            **widget_kwargs
+        )
         fields = self.named_fields.values()
         super(NamedMultiValueField, self).__init__(
             widget=widget, fields=fields, initial=initial,
@@ -110,6 +119,49 @@ class SerializedDateTimeField(DateTimeField):
         if value in self.empty_values:
             return None
         return epoch(value)
+
+
+class DateTimeRangeField(NamedMultiValueField):
+    widget = DateTimeRangeInput
+    datetime_field_class = DateTimeField
+    default_error_messages = {
+        'invalid_datetime': _('Enter a valid datetime.'),
+    }
+
+    def __init__(self, input_formats=None, warn_start_past=False, warn_duration=False, *args, **kwargs):
+        errors = self.default_error_messages.copy()
+        if 'error_messages' in kwargs:
+            errors.update(kwargs['error_messages'])
+        self.warn_start_past = warn_start_past
+        self.warn_duration = warn_duration
+        localize = kwargs.get('localize', False)
+        fields = (
+            ('start', self.datetime_field_class(
+                label='Start',
+                input_formats=input_formats,
+                error_messages={'invalid': errors['invalid_datetime']},
+                localize=localize
+            )),
+            ('end', self.datetime_field_class(
+                label='End',
+                input_formats=input_formats,
+                error_messages={'invalid': errors['invalid_datetime']},
+                localize=localize
+            )),
+        )
+        super(DateTimeRangeField, self).__init__(fields=fields, *args, **kwargs)
+
+    def widget_attrs(self, widget):
+        attrs = super(DateTimeRangeField, self).widget_attrs(widget)
+        if self.warn_start_past:
+            attrs.update({'data-warn-start-past': str(self.warn_start_past)})
+        if self.warn_duration:
+            attrs.update({'data-warn-duration': str(self.warn_duration)})
+        return attrs
+
+
+class SerializedDateTimeRangeField(DateTimeRangeField):
+    datetime_field_class = SerializedDateTimeField
 
 
 class SerializedModelMultipleChoiceField(ModelMultipleChoiceField):

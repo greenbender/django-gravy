@@ -4,9 +4,16 @@ from django.forms.fields import *
 from django.conf import settings
 from django.db.models.fields import TextField
 from django.utils import formats
+from django.forms.utils import flatatt
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from ..fields import *
 from ..widgets import *
 from .base import Theme
+
+
+import logging
+log = logging.getLogger('gravy.forms.theme.bootstrap')
 
 
 __all__ = [
@@ -160,7 +167,7 @@ class BootstrapCombobox(FormControlMixin, BootstrapMixin, Select):
         )
 
 
-class BootstrapDateRangePicker(NamedMultiWidget):
+class BootstrapDateRangePicker(DateTimeRangeInput):
     date_ranges = (
         (1800, '30 min'),
         (3600, '1 hr'),
@@ -172,20 +179,33 @@ class BootstrapDateRangePicker(NamedMultiWidget):
         css = {'all': ('css/bootstrap.dateRangePicker.css',)}
         js = ('js/bootstrap.dateRangePicker.js',)
 
-    def __init__(self, date_ranges=None, *args, **kwargs):
+    def __init__(self, date_ranges=None, warn_start_past=None, warn_duration=None, *args, **kwargs):
         if date_ranges is not None:
             self.date_ranges = date_ranges
+        self.warn_start_past = warn_start_past
+        self.warn_duration = warn_duration
         super(BootstrapDateRangePicker, self).__init__(*args, **kwargs)
 
     def get_date_ranges(self):
         return self.date_ranges
 
     def format_output(self, rendered_widgets, attrs=None):
-        div = '<div data-toggle="dateRangePicker">{0}<div class="btn-group">{1}</div></div>'
-        btn = '<button class="btn btn-default" data-value="{0}">{1}</button>'
-        btn_group = ''.join([btn.format(v, n) for v, n in self.get_date_ranges()])
+        final_attrs = {'data-toggle': 'dateRangePicker'}
+        if self.warn_start_past:
+            final_attrs['data-warn-start-past'] = self.warn_start_past
+        if self.warn_duration:
+            final_attrs['data-warn-duration'] = self.warn_duration
+        btns = ''.join([
+            format_html(
+                '<button class="btn btn-default" data-value="{}">{}</button>', v, n
+            ) for v, n in self.get_date_ranges()
+        ])
         output = super(BootstrapDateRangePicker, self).format_output(rendered_widgets, attrs=attrs)
-        return div.format(output, btn_group)
+        return format_html('<div {}>{}<div class="btn-group">{}</div></div>',
+            flatatt(final_attrs),
+            output,
+            mark_safe(btns)
+        )
 
 
 class BootstrapMultipleFileInput(OptionalMixin, FormControlMixin, BootstrapMixin, MultipleFileInput):
@@ -209,6 +229,7 @@ class BootstrapTheme(Theme):
         (FileField, BootstrapFileInput),
         (MultipleFileField, BootstrapMultipleFileInput),
         (DateTimeField, BootstrapDateTimePicker),
+        (DateTimeRangeField, BootstrapDateRangePicker),
         (SerializedDateTimeField, BootstrapSerializedDateTimePicker),
         (ModelMultipleChoiceField, BootstrapSelectMultiple),
         (SeparatedChoiceField, BootstrapSeparatedSelect),

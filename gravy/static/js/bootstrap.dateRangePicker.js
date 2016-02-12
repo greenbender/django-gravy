@@ -2,6 +2,8 @@
 
     var pluginName = 'dateRangePicker',
         defaults = {
+            warnStartPast: false,
+            warnDuration: false
         };
 
     var DateRangePicker = function(element, options) {
@@ -14,15 +16,46 @@
 
         init: function() {
             this.$element = $(this.element);
-            this.$start = this.$element.find('input[type="text"][data-start]');
-            this.$end = this.$element.find('input[type="text"][data-end]');
+            this.$start = this.$element.find('input[type="text"]').first();
+            this.$end = this.$element.find('input[type="text"]').last();
             this.$buttons = this.$element.find('button[data-value]');
-            this.initButtons();
+            this.initEvents();
             return this;
         },
 
-        initButtons: function() {
+        initEvents: function() {
+            setInterval($.proxy(this.validate, this), 200);
             this.$buttons.click($.proxy(this.click, this));
+        },
+
+        validate: function(e) {
+            var start = this.$start.data('DateTimePicker').date();
+            var end = this.$end.data('DateTimePicker').date();
+            var start_warn = 0;
+            var end_warn = 0;
+            if (this.options.warnStartPast && start) {
+                if (start.add(this.options.warnStartPast, 'seconds') < moment()) {
+                    start_warn++;
+                }
+            }
+            if (this.options.warnDuration && start && end) {
+                if (start.add(this.options.warnDuration, 'seconds') < end) {
+                    start_warn++;
+                    end_warn++;
+                }
+            }
+            if (start_warn && !this.$start.hasClass('warning')) {
+                this.$start.addClass('warning');
+            }
+            if (!start_warn && this.$start.hasClass('warning')) {
+                this.$start.removeClass('warning');
+            }
+            if (end_warn && !this.$end.hasClass('warning')) {
+                this.$end.addClass('warning');
+            }
+            if (!end_warn && this.$end.hasClass('warning')) {
+                this.$end.removeClass('warning');
+            }
         },
 
         click: function(e) {
