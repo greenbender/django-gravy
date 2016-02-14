@@ -74,7 +74,7 @@
         
         update: function(value) {
             if (!$.isNumeric(value))
-                value = value.valuel
+                value = value.value;
             this.then = moment.utc(value * 1000).locale(this.options.locale);
         },
 
