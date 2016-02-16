@@ -1,10 +1,14 @@
 from django.utils.six.moves.urllib.parse import unquote
 from django.utils import timezone, six
+from django.utils.encoding import force_text
+from django.utils.safestring import SafeText, mark_safe
+from django.utils.functional import allow_lazy
 from django.template import Template, Context
 from django.conf import settings
 from collections import OrderedDict
 from datetime import datetime as _datetime
 import magic
+import unicodedata
 import mimetypes
 import calendar
 import weakref
@@ -179,6 +183,22 @@ class _DoesNotExist(object):
         return False
     def __int__(self):
         return 0
+
+
+def islugify(value, allow_unicode=False):
+    """
+    Like slugify but doesn't change case.
+    """
+    # basically a clone of django.utils.text.slugify()
+    value = force_text(value)
+    if allow_unicode:
+        value = unicodedata.normalize('NFKC', value)
+        value = re.sub('[^\w\s-]', '', value, flags=re.U).strip()
+        return mark_safe(re.sub('[-\s]+', '-', value, flags=re.U))
+    value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
+    value = re.sub('[^\w\s-]', '', value).strip()
+    return mark_safe(re.sub('[-\s]+', '-', value))
+islugify = allow_lazy(islugify, six.text_type, SafeText)
 
 
 DoesNotExist = _DoesNotExist()
