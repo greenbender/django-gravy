@@ -25,7 +25,7 @@ class NginxRemoteUserMiddleware(RemoteUserMiddleware):
 class CurrentUserMiddleware(object):
 
     def process_request(self, request):
-        if request.method in ('HEAD', 'OPTION', 'TRACE'):
+        if request.method in ('GET', 'HEAD', 'OPTION', 'TRACE'):
             return
         if hasattr(request, 'user') and request.user.is_authenticated():
             user = request.user
