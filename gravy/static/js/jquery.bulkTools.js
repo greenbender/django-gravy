@@ -36,7 +36,6 @@ $('form[data-toggle="bulkAction"]').each(function() {
         var params = [];
         $('input:checkbox[name="' + options.name + '"]:checked').each(function() {
             $('<input>', {'type': 'hidden', 'name': options.name, 'value': $(this).val()}).appendTo($this);
-            console.log($this.serialize());
         });
     });
 });
