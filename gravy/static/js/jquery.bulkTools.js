@@ -10,7 +10,7 @@ $("[data-toggle='bulkSelector']").each(function() {
     });
 });
 
-$('[data-toggle="bulkAction"]').each(function() {
+$('a[data-toggle="bulkAction"]').each(function() {
     var $this = $(this);
     var options = $this.data();
     var base = $this.attr('href');
@@ -26,5 +26,17 @@ $('[data-toggle="bulkAction"]').each(function() {
         });
         if (params.length > 0)
             $this.attr('href', base + sep + $.param(params));
+    });
+});
+
+$('form[data-toggle="bulkAction"]').each(function() {
+    var $this = $(this);
+    var options = $this.data();
+    $this.submit(function() {
+        var params = [];
+        $('input:checkbox[name="' + options.name + '"]:checked').each(function() {
+            $('<input>', {'type': 'hidden', 'name': options.name, 'value': $(this).val()}).appendTo($this);
+            console.log($this.serialize());
+        });
     });
 });

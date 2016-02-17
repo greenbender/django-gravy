@@ -62,6 +62,8 @@ class BetterRedirectView(RedirectView):
 class NextUrlMixin(object):
     def get_redirect_url(self, *args, **kwargs):
         return self.request.GET.get('next', '/')
+    def get_success_url(self):
+        return self.get_redirect_url()
 
 
 class LastPageBase(object):
