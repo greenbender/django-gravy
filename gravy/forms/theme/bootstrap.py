@@ -167,6 +167,10 @@ class BootstrapCombobox(FormControlMixin, BootstrapMixin, Select):
         )
 
 
+class BootstrapDependsWidget(DependsWidget):
+    enable_widget = BootstrapCheckboxToggle
+
+
 class BootstrapDateRangePicker(DateTimeRangeInput):
     date_ranges = (
         (1800, '30 min'),
@@ -235,6 +239,7 @@ class BootstrapTheme(Theme):
         (SeparatedChoiceField, BootstrapSeparatedSelect),
         (URLField, BootstrapURLInput),
         (ParsedURLField, BootstrapParsedURLInput),
+        (DependsField, BootstrapDependsWidget),
     )
 
     @classmethod

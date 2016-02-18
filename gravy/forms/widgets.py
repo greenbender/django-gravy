@@ -19,7 +19,7 @@ __all__ = [
     'NamedMultiWidget', 'RepeatNamedMultiWidget', 'ParsedURLInput',
     'SeparatedWidgetMixin', 'SeparatedSelect', 'SeparatedTextInput',
     'SeparatedTextarea', 'SerializedDateTimeInput', 'MultipleFileInput',
-    'DateTimeRangeInput',
+    'DateTimeRangeInput', 'DependsWidget',
 ]
 # proxy django.forms.widgets
 import django.forms.widgets
@@ -31,6 +31,7 @@ __all__.extend(django.forms.widgets.__all__)
 class NamedMultiWidget(MultiWidget):
     widgets = ()
     subwidget_name_format = '{0}.{1}'
+    classname = 'named-multi-widget'
 
     class Media:
         css = {
@@ -77,9 +78,7 @@ class NamedMultiWidget(MultiWidget):
         return value
 
     def format_output(self, rendered_widgets, attrs=None):
-        final_attrs = {
-            'class': 'named-multi-widget'
-        }
+        final_attrs = {'class': self.classname}
         id_ = attrs.get('id')
         if id_:
             final_attrs['id'] = id_
@@ -110,6 +109,7 @@ class NamedMultiWidget(MultiWidget):
         return [None]*len(self.named_widgets)
 
 
+# TODO: cleanup rendering attrs etc
 class RepeatNamedMultiWidget(NamedMultiWidget):
 
     widget_class = 'repeat-named-multi-widget'
@@ -184,6 +184,22 @@ class RepeatNamedMultiWidget(NamedMultiWidget):
             toggle=self.toggle, id=id_, template=template,
             subwidgets=''.join(rendered)
         )
+
+
+class DependsWidget(NamedMultiWidget):
+    classname = 'depends-widget named-multi-widget'
+    enable_widget = CheckboxInput
+
+    class Media:
+        js = ('js/jquery.dependsWidget.js',)
+
+    def __init__(self, widgets=None, *args, **kwargs):
+        if isinstance(self.enable_widget, type):
+            self.enable_widget = self.enable_widget()
+        w = OrderedDict([('enabled', self.enable_widget)])
+        if widgets is not None:
+            w.update(widgets)
+        super(DependsWidget, self).__init__(widgets=w, *args, **kwargs)
 
 
 class ParsedURLInput(URLInput):
