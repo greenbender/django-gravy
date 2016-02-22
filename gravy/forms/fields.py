@@ -88,7 +88,7 @@ class RepeatNamedMultiValueField(NamedMultiValueField):
         return [super(RepeatNamedMultiValueField, self).clean(v) for v in value]
 
 
-class DependsField(NamedMultiValueField):
+class DependsField(BooleanField):
     widget = DependsWidget
 
 
@@ -556,6 +556,21 @@ class FormGenerator(object):
         }
         validate_json(field, schema)
 
+    @staticmethod
+    def create_field_for_enable(field, options):
+        return DependsField(**options)
+
+    @staticmethod
+    def validate_field_for_enable(field, options):
+        schema = {
+            'type': 'object',
+            'properties': {
+                'type': {'enum': ['enable']},
+                'initial': {'type': 'boolean'},
+            }, 'required': ['type']
+        }
+        validate_json(field, schema)
+
     def create_field_for_multiple(self, field, options):
         options['fields'] = []
         for subfield in field['fields']:
@@ -587,25 +602,6 @@ class FormGenerator(object):
             'type': 'object',
             'properties': {
                 'type': {'enum': ['repeat']},
-                'fields': {'type': 'array'}
-            }, 'required': ['type', 'fields']
-        }
-        validate_json(field, schema)
-        for subfield in field['fields']:
-            cls.validate_field(subfield)
-
-    def create_field_for_depends(self, field, options):
-        options['fields'] = []
-        for subfield in field['fields']:
-            options['fields'].append((subfield['name'], self.create_field(subfield)))
-        return DependsField(**options)
-
-    @classmethod
-    def validate_field_for_depends(cls, field, options):
-        schema = {
-            'type': 'object',
-            'properties': {
-                'type': {'enum': ['depends']},
                 'fields': {'type': 'array'}
             }, 'required': ['type', 'fields']
         }

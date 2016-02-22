@@ -167,8 +167,8 @@ class BootstrapCombobox(FormControlMixin, BootstrapMixin, Select):
         )
 
 
-class BootstrapDependsWidget(DependsWidget):
-    enable_widget = BootstrapCheckboxToggle
+class BootstrapDependsWidget(BootstrapCheckboxToggle, DependsWidget):
+    pass
 
 
 class BootstrapDateRangePicker(DateTimeRangeInput):

@@ -186,20 +186,16 @@ class RepeatNamedMultiWidget(NamedMultiWidget):
         )
 
 
-class DependsWidget(NamedMultiWidget):
-    classname = 'depends-widget named-multi-widget'
-    enable_widget = CheckboxInput
+class DependsWidget(CheckboxInput):
+    classname = 'depends-widget'
 
     class Media:
         js = ('js/jquery.dependsWidget.js',)
 
-    def __init__(self, widgets=None, *args, **kwargs):
-        if isinstance(self.enable_widget, type):
-            self.enable_widget = self.enable_widget()
-        w = OrderedDict([('enabled', self.enable_widget)])
-        if widgets is not None:
-            w.update(widgets)
-        super(DependsWidget, self).__init__(widgets=w, *args, **kwargs)
+    def __init__(self, attrs=None, *args, **kwargs):
+        attrs = attrs or {}
+        attrs['class'] = self.classname
+        super(DependsWidget, self).__init__(attrs=attrs, *args, **kwargs)
 
 
 class ParsedURLInput(URLInput):

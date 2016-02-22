@@ -1,7 +1,6 @@
+/* XXX: this is terrible it is highly coupled with html classes of 'unrelated'
+ * elements */
 (function($) {
-
-    var classname = 'depends-widget';
-    var selector = '.' + classname;
 
     $.fn.extend({
 
@@ -9,16 +8,12 @@
             this.each(function() {
 
                 var $elem = $(this);
-                var $children = $elem.children('li');
-                var $first = $children.first();
-                var $enable = $first.find('input[type="checkbox"]');
-                var $dependants = $children.not($first);
-                delete $children;
-                delete $first;
+                var $dependants = $elem.closest('.form-group').siblings().wrapAll('<div/>').parent();
 
-                $dependants.hide();
+                if (!$elem[0].checked)
+                    $dependants.hide();
 
-                $enable.change(function() {
+                $elem.change(function() {
                     if (this.checked)
                         $dependants.show(200);
                     else
@@ -31,6 +26,6 @@
 
     });
 
-    $(selector).dependsWidget();
+    $('.depends-widget').dependsWidget();
 
 })(jQuery);
