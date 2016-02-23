@@ -147,6 +147,8 @@
         },
 
         poll: function() {
+            if (!$.contains(document, this.element))
+                return;
             var plot = this.$element.data('plot');
             if (plot) {
                 var axis = plot.getAxes().xaxis,

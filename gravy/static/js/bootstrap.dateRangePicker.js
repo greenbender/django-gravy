@@ -16,19 +16,21 @@
 
         init: function() {
             this.$element = $(this.element);
-            this.$start = this.$element.find('input[type="text"]').first();
-            this.$end = this.$element.find('input[type="text"]').last();
+            this.$start = this.$element.find('input[type="text"]').first().datetimePicker();
+            this.$end = this.$element.find('input[type="text"]').last().datetimePicker();
             this.$buttons = this.$element.find('button[data-value]');
             this.initEvents();
+            this.validate();
             return this;
         },
 
         initEvents: function() {
-            setInterval($.proxy(this.validate, this), 200);
             this.$buttons.click($.proxy(this.click, this));
         },
 
-        validate: function(e) {
+        validate: function() {
+            if (!$.contains(document, this.element))
+                return;
             var start = this.$start.data('DateTimePicker').date();
             var end = this.$end.data('DateTimePicker').date();
             var start_warn = 0;
@@ -56,6 +58,7 @@
             if (!end_warn && this.$end.hasClass('warning')) {
                 this.$end.removeClass('warning');
             }
+            setTimeout($.proxy(this.validate, this), 200);
         },
 
         click: function(e) {

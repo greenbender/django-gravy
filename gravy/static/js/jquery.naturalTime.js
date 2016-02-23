@@ -88,11 +88,10 @@
         },
 
         poll: function() {
+            if (!$.contains(document, this.element))
+                return;
             this.humanize();
-
-            /* only continue to poll if we are in the DOM */
-            if ($.contains(document.documentElement, this.element))
-                setTimeout($.proxy(this.poll, this), this.options.interval);
+            setTimeout($.proxy(this.poll, this), this.options.interval);
         }
 
     };

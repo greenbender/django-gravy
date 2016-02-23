@@ -221,6 +221,8 @@
         },
 
         poll: function() {
+            if (!$.contains(document, this.element))
+                return;
             this.update();
             setTimeout($.proxy(this.poll, this), this.options.interval);
         }
