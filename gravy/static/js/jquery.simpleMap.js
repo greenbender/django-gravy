@@ -93,6 +93,11 @@
             // map
             this.map = new OpenLayers.Map({div: this.element});
 
+            // disable doubleclick navigation
+            this.map.addControl(new OpenLayers.Control.Navigation({
+                defaultDblClick: function() {return;}
+            }));
+
             // layers
             this.layers = {
                 osm: new OpenLayers.Layer.OSM('OpenStreetMap', this.options.tileUrl),
@@ -142,7 +147,8 @@
         },
 
         zoom: function() {
-            this.map.zoomToExtent(this.layers.vector.getDataExtent());
+            if (this.layers.vector.features.length)
+                this.map.zoomToExtent(this.layers.vector.getDataExtent());
         },
 
         click: function(e) {
