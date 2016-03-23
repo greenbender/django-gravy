@@ -1,7 +1,7 @@
 from _binding import *
 
 
-def get_simple_formats():
+def print_simple_formats():
     count = c_int()
     finfo = SF_FORMAT_INFO()
     sf_command(None, SFC_GET_SIMPLE_FORMAT_COUNT, byref(count), sizeof(count))
@@ -11,7 +11,7 @@ def get_simple_formats():
         print "%08x  %s %s" % (finfo.format, finfo.name, finfo.extension)
 
 
-def get_major_formats():
+def print_major_formats():
     count = c_int()
     finfo = SF_FORMAT_INFO()
     sf_command(None, SFC_GET_FORMAT_MAJOR_COUNT, byref(count), sizeof(count))
@@ -21,7 +21,7 @@ def get_major_formats():
         print "%08x  %s %s" % (finfo.format, finfo.name, finfo.extension)
 
 
-def get_subtype_formats():
+def print_subtype_formats():
     count = c_int()
     finfo = SF_FORMAT_INFO()
     sf_command(None, SFC_GET_FORMAT_SUBTYPE_COUNT, byref(count), sizeof(count))
