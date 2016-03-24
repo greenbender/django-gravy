@@ -17,7 +17,9 @@
         init: function() {
             this.$element = $(this.element);
             this.$start = this.$element.find('input[type="text"]').first().datetimePicker();
+            this.startPicker = this.$start.data('DateTimePicker');
             this.$end = this.$element.find('input[type="text"]').last().datetimePicker();
+            this.endPicker = this.$end.data('DateTimePicker');
             this.$buttons = this.$element.find('button[data-value]');
             this.initEvents();
             this.validate();
@@ -26,13 +28,12 @@
 
         initEvents: function() {
             this.$buttons.click($.proxy(this.click, this));
+            this.$element.on('dp.change', $.proxy(this.validate, this));
         },
 
         validate: function() {
-            if (!$.contains(document, this.element))
-                return;
-            var start = this.$start.data('DateTimePicker').date();
-            var end = this.$end.data('DateTimePicker').date();
+            var start = this.startPicker.date();
+            var end = this.endPicker.date();
             var start_warn = 0;
             var end_warn = 0;
             if (this.options.warnStartPast && start) {
@@ -58,18 +59,17 @@
             if (!end_warn && this.$end.hasClass('warning')) {
                 this.$end.removeClass('warning');
             }
-            setTimeout($.proxy(this.validate, this), 200);
         },
 
         click: function(e) {
             var $button = $(e.target);
-            var start = this.$start.data('DateTimePicker').date();
+            var start = this.startPicker.date();
             if (start == null) {
                 start = moment();
-                this.$start.data('DateTimePicker').date(start);
+                this.startPicker.date(start);
             }
             var end = start.add($button.data('value'), 's');
-            this.$end.data('DateTimePicker').date(end);
+            this.endPicker.date(end);
             e.preventDefault();
             return false;
         }

@@ -1,6 +1,10 @@
 /* datetimePicker */
 (function($) {
 
+    var keyBinds = $.fn.datetimepicker.defaults.keyBinds;
+    var unbind = ['up', 'down', 'control up', 'control down', 'left', 'right', 'pageUp', 'pageDown'];
+    $.each(unbind, function(i, u) { delete keyBinds[u]; });
+
     $.fn.extend({
 
         datetimePicker: function() {

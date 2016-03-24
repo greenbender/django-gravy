@@ -99,7 +99,7 @@ class DateTimeMixin(object):
         css = {'all': ('css/bootstrap-datetimepicker.css',)}
         js = (
             'js/moment.min.js',
-            'js/bootstrap-datetimepicker.min.js',
+            'js/bootstrap-datetimepicker.js',
             'js/bootstrap.datetimePicker.js',
         )
 
