@@ -14,6 +14,8 @@
                 var options = elem.data();
                 // remove invalid options
                 $.each(options, function(key, value) {
+                    if (key == 'DateTimePicker')
+                        return;
                     if ($.fn.datetimepicker.defaults[key] === undefined)
                         delete options[key];
                 });
