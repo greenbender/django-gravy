@@ -130,9 +130,11 @@ class DateTimeRangeField(NamedMultiValueField):
     datetime_field_class = DateTimeField
     default_error_messages = {
         'invalid_datetime': _('Enter a valid datetime.'),
+        'negative_range'  : _('Start time is after end time.'),
+        'end_not_supplied': _('End time is required.'),
     }
 
-    def __init__(self, input_formats=None, warn_start_past=False, warn_duration=False, *args, **kwargs):
+    def __init__(self, input_formats=None, warn_start_past=False, warn_duration=False, require_end=False, *args, **kwargs):
         errors = self.default_error_messages.copy()
         if 'error_messages' in kwargs:
             errors.update(kwargs['error_messages'])
@@ -153,6 +155,7 @@ class DateTimeRangeField(NamedMultiValueField):
                 localize=localize
             )),
         )
+        self.require_end = require_end
         super(DateTimeRangeField, self).__init__(fields=fields, *args, **kwargs)
 
     def widget_attrs(self, widget):
@@ -162,6 +165,14 @@ class DateTimeRangeField(NamedMultiValueField):
         if self.warn_duration:
             attrs.update({'data-warn-duration': str(self.warn_duration)})
         return attrs
+
+    def clean(self, value):
+        ret = super(DateTimeRangeField, self).clean(value)
+        if self.require_end and 'end' not in ret:
+            raise ValidationError(self.error_messages['end_not_supplied'])
+        if 'start' in ret and 'end' in ret and ret['start'] > ret['end']:
+            raise ValidationError(self.error_messages['negative_range'])
+        return ret
 
 
 class SerializedDateTimeRangeField(DateTimeRangeField):
