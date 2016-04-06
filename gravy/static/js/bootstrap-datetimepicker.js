@@ -925,6 +925,10 @@
 
                 input.blur();
 
+                for (var key in keyState) {
+                    delete keyState[key];
+                }
+
                 return picker;
             },
 
