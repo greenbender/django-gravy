@@ -47,7 +47,7 @@
                 }
                 this.$info.html(html);
             } else {
-                this.$info.text(' ');
+                this.$info.html('&nbsp;');
             }
         },
 
