@@ -1,2 +1,2 @@
 div[data-toggle=dateRangePicker] > div {margin-top:1em;}
-div[data-toggle=dateRangePicker] input.warning {color:#8a6d3b;background-color:#fcf8e3;}
+div[data-toggle=dateRangePicker] div.info {display:inline-block;padding:6px 12px;vertical-align:middle;float:right;}

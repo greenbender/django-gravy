@@ -131,48 +131,36 @@ class DateTimeRangeField(NamedMultiValueField):
     default_error_messages = {
         'invalid_datetime': _('Enter a valid datetime.'),
         'negative_range'  : _('Start time is after end time.'),
-        'end_not_supplied': _('End time is required.'),
     }
 
-    def __init__(self, input_formats=None, warn_start_past=False, warn_duration=False, require_end=False, *args, **kwargs):
+    def __init__(self, input_formats=None, require_start=False, require_end=False, *args, **kwargs):
         errors = self.default_error_messages.copy()
         if 'error_messages' in kwargs:
             errors.update(kwargs['error_messages'])
-        self.warn_start_past = warn_start_past
-        self.warn_duration = warn_duration
         localize = kwargs.get('localize', False)
         fields = (
             ('start', self.datetime_field_class(
                 label='Start',
                 input_formats=input_formats,
+                required=require_start,
                 error_messages={'invalid': errors['invalid_datetime']},
-                localize=localize
+                localize=localize,
             )),
             ('end', self.datetime_field_class(
                 label='End',
                 input_formats=input_formats,
+                required=require_end,
                 error_messages={'invalid': errors['invalid_datetime']},
-                localize=localize
+                localize=localize,
             )),
         )
-        self.require_end = require_end
         super(DateTimeRangeField, self).__init__(fields=fields, *args, **kwargs)
 
-    def widget_attrs(self, widget):
-        attrs = super(DateTimeRangeField, self).widget_attrs(widget)
-        if self.warn_start_past:
-            attrs.update({'data-warn-start-past': str(self.warn_start_past)})
-        if self.warn_duration:
-            attrs.update({'data-warn-duration': str(self.warn_duration)})
-        return attrs
-
     def clean(self, value):
-        ret = super(DateTimeRangeField, self).clean(value)
-        if self.require_end and 'end' not in ret:
-            raise ValidationError(self.error_messages['end_not_supplied'])
-        if 'start' in ret and 'end' in ret and ret['start'] > ret['end']:
+        cleaned = super(DateTimeRangeField, self).clean(value)
+        if 'start' in cleaned and 'end' in cleaned and cleaned['start'] > cleaned['end']:
             raise ValidationError(self.error_messages['negative_range'])
-        return ret
+        return cleaned
 
 
 class SerializedDateTimeRangeField(DateTimeRangeField):

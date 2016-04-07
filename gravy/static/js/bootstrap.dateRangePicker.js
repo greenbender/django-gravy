@@ -1,10 +1,7 @@
 ;(function($, window, document, undefined) {
 
     var pluginName = 'dateRangePicker',
-        defaults = {
-            warnStartPast: false,
-            warnDuration: false
-        };
+        defaults = {};
 
     var DateRangePicker = function(element, options) {
         this.element = element;
@@ -21,43 +18,35 @@
             this.$end = this.$element.find('input[type="text"]').last().datetimePicker();
             this.endPicker = this.$end.data('DateTimePicker');
             this.$buttons = this.$element.find('button[data-value]');
+            this.$info = $('<div>', {'class': 'info'}).appendTo(this.$element);
             this.initEvents();
-            this.validate();
+            this.updateInfo();
             return this;
         },
 
         initEvents: function() {
             this.$buttons.click($.proxy(this.click, this));
-            this.$element.on('dp.change', $.proxy(this.validate, this));
+            this.$element.on('dp.change', $.proxy(this.updateInfo, this));
         },
 
-        validate: function() {
+        updateInfo: function() {
             var start = this.startPicker.date();
             var end = this.endPicker.date();
-            var start_warn = 0;
-            var end_warn = 0;
-            if (this.options.warnStartPast && start) {
-                if (start.add(this.options.warnStartPast, 'seconds') < moment()) {
-                    start_warn++;
-                }
-            }
-            if (this.options.warnDuration && start && end) {
-                if (start.add(this.options.warnDuration, 'seconds') < end) {
-                    start_warn++;
-                    end_warn++;
-                }
-            }
-            if (start_warn && !this.$start.hasClass('warning')) {
-                this.$start.addClass('warning');
-            }
-            if (!start_warn && this.$start.hasClass('warning')) {
-                this.$start.removeClass('warning');
-            }
-            if (end_warn && !this.$end.hasClass('warning')) {
-                this.$end.addClass('warning');
-            }
-            if (!end_warn && this.$end.hasClass('warning')) {
-                this.$end.removeClass('warning');
+            if (start && end) {
+                var diff = end.diff(start);
+                var duration = moment.duration(Math.abs(diff));
+                var hours = Math.floor(duration.asHours());
+                var minutes = duration.minutes();
+                var txt = 'Duration: '
+                if (diff < 0)
+                    txt += '-'
+                if (hours)
+                    txt += hours + 'h'
+                if (minutes || !hours)
+                    txt += (hours ? ' ':'') + minutes + 'm'
+                this.$info.text(txt);
+            } else {
+                this.$info.empty();
             }
         },
 
