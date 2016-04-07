@@ -205,7 +205,7 @@ class BootstrapDateRangePicker(DateTimeRangeInput):
             ) for v, n in self.get_date_ranges()
         ])
         output = super(BootstrapDateRangePicker, self).format_output(rendered_widgets, attrs=attrs)
-        return format_html('<div {}>{}<div class="btn-group">{}</div></div>',
+        return format_html('<div {}>{}<div><div class="info"></div><div class="btn-group">{}</div></div></div>',
             flatatt(final_attrs),
             output,
             mark_safe(btns)

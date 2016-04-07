@@ -1,2 +1,2 @@
 div[data-toggle=dateRangePicker] > div {margin-top:1em;}
-div[data-toggle=dateRangePicker] div.info {display:inline-block;padding:6px 12px;vertical-align:middle;float:right;}
+div[data-toggle=dateRangePicker] > div > div {float:right;clear:both;}

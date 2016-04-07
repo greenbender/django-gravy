@@ -18,7 +18,7 @@
             this.$end = this.$element.find('input[type="text"]').last().datetimePicker();
             this.endPicker = this.$end.data('DateTimePicker');
             this.$buttons = this.$element.find('button[data-value]');
-            this.$info = $('<div>', {'class': 'info'}).appendTo(this.$element);
+            this.$info = this.$element.find('.info');
             this.initEvents();
             this.updateInfo();
             return this;
@@ -32,21 +32,22 @@
         updateInfo: function() {
             var start = this.startPicker.date();
             var end = this.endPicker.date();
-            if (start && end) {
-                var diff = end.diff(start);
-                var duration = moment.duration(Math.abs(diff));
-                var hours = Math.floor(duration.asHours());
-                var minutes = duration.minutes();
-                var txt = 'Duration: '
-                if (diff < 0)
-                    txt += '-'
-                if (hours)
-                    txt += hours + 'h'
-                if (minutes || !hours)
-                    txt += (hours ? ' ':'') + minutes + 'm'
-                this.$info.text(txt);
+            if (start) {
+                var html = 'Start <strong>' + start.locale('en').fromNow() + '</strong>';
+                if (end) {
+                    html += ' for <strong>'
+                    var diff = end.diff(start);
+                    var duration = moment.duration(Math.abs(diff));
+                    var hours = Math.floor(duration.asHours());
+                    var minutes = duration.minutes();
+                    if (diff < 0) html += '-'
+                    if (hours) html += hours + 'h'
+                    if (minutes || !hours) html += (hours ? ' ':'') + minutes + 'm'
+                    html += '</strong>'
+                }
+                this.$info.html(html);
             } else {
-                this.$info.empty();
+                this.$info.text(' ');
             }
         },
 
