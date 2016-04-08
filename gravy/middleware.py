@@ -1,4 +1,6 @@
+import pytz
 from django.db.models import signals
+from django.utils import timezone
 from django.contrib.auth.middleware import RemoteUserMiddleware
 from .db.models.registration import CurrentUserFieldRegistry
 
@@ -45,3 +47,13 @@ class CurrentUserMiddleware(object):
     def process_response(self, request, response):
         signals.pre_save.disconnect(dispatch_uid=request)
         return response
+
+
+# from https://docs.djangoproject.com/en/1.9/topics/i18n/timezones/
+class TimezoneMiddleware(object):
+    def process_request(self, request):
+        tzname = request.session.get('django_timezone')
+        if tzname:
+            timezone.activate(pytz.timezone(tzname))
+        else:
+            timezone.deactivate()
