@@ -204,7 +204,10 @@ class ForeignModelMixin(object):
             elif hasattr(obj, self.foreign_field_name):
                 self.foreign_object = getattr(obj, self.foreign_field_name)
             else:
-                self.foreign_object = obj[self.foreign_field_name]
+                self.foreign_object = get_object_or_404(
+                    self.foreign_model,
+                    pk=obj[self.foreign_field_name]
+                )
 
         # get the instance from the provided instance pk
         elif self.foreign_object_pk is not None:
