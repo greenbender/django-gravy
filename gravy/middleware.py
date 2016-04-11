@@ -10,7 +10,8 @@ log = logging.getLogger('gravy.middleware')
 
 
 __all__ = [
-    'DebugMiddleware', 'NginxRemoteUserMiddleware', 'CurrentUserMiddleware'
+    'DebugMiddleware', 'NginxRemoteUserMiddleware', 'CurrentUserMiddleware',
+    'TimezoneMiddleware',
 ]
 
 
@@ -51,6 +52,7 @@ class CurrentUserMiddleware(object):
 
 # from https://docs.djangoproject.com/en/1.9/topics/i18n/timezones/
 class TimezoneMiddleware(object):
+
     def process_request(self, request):
         tzname = request.session.get('django_timezone')
         if tzname:
