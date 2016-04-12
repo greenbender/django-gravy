@@ -24,30 +24,16 @@ log = logging.getLogger('gravy.utils')
 # TODO: check the datetime functions (do they do what is expected?)
 def epoch(dt):
     """
-    Convert a datetime object to unix epoch timestamp.
+    Convert a timezone aware datetime object to unix epoch timestamp.
     """
     return int(time.mktime(dt.timetuple()))
 
 
 def datetime(e):
     """
-    Convert epoch datetime to localtime timezone aware datetime.
+    Convert epoch datetime to current timezone aware datetime.
     """
-    return timezone.make_aware(_datetime.fromtimestamp(e))
-
-
-def epochutc(dt):
-    """
-    Convert a datetime object to unix utc epoch timestamp.
-    """
-    return int(calendar.timegm(dt.utctimetuple()))
-
-
-def datetimeutc(e):
-    """
-    Convert epoch datetime to utc timezone aware datetime.
-    """
-    return timezone.make_aware(_datetime.utcfromtimestamp(e), timezone.utc)
+    return _datetime.fromtimestamp(e, timezone.get_current_timezone())
 
 
 def seconds_to_units(seconds):
