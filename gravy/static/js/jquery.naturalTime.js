@@ -7,6 +7,7 @@
         },
         locales = {
             'en': {
+                isUpdate: true,
                 relativeTime: {
                     future: 'in %s',
                     past:   '%s ago',
@@ -24,6 +25,7 @@
                 },
             },
             'en-deadline': {
+                parentLocale: 'en',
                 relativeTime: {
                     future: 'in %s',
                     past:   '%s overdue',
@@ -42,8 +44,15 @@
             }
         };
 
-     /* add locales to moment */
-     $.each(locales, moment.locale);
+    /* add locales to moment */
+    $.each(locales, function(name, locale) {
+        if (locale.isUpdate) {
+            delete locale.isUpdate;
+            moment.updateLocale(name, locale);
+        } else {
+            moment.defineLocale(name, locale);
+        }
+    });
 
     var NaturalTime = function(element, options) {
         this.element = element;
