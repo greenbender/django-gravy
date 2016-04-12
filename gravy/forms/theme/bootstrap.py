@@ -7,6 +7,7 @@ from django.utils import formats
 from django.forms.utils import flatatt
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
+from django.utils import timezone
 from ..fields import *
 from ..widgets import *
 from .base import Theme
@@ -99,6 +100,7 @@ class DateTimeMixin(object):
         css = {'all': ('css/bootstrap-datetimepicker.css',)}
         js = (
             'js/moment.min.js',
+            'js/moment-timezone-with-data.min.js',
             'js/bootstrap-datetimepicker.js',
             'js/bootstrap.datetimePicker.js',
         )
@@ -107,6 +109,8 @@ class DateTimeMixin(object):
         attrs = attrs or {}
         attrs['data-widget-positioning'] = '{"horizontal": "right", "vertical": "bottom"}'
         attrs['data-format'] = self._moment_format(format or formats.get_format(self.format_key)[0])
+        if settings.USE_TZ:
+            attrs['data-time-zone'] = timezone.get_current_timezone_name()
         super(DateTimeMixin, self).__init__(attrs=attrs, format=format)
 
     _format_map = (

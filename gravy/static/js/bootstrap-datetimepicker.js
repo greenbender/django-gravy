@@ -151,6 +151,7 @@
                     }
                 } else {
                     if (tzEnabled) {
+                        /*
                         currentZoneOffset = moment().tz(options.timeZone).utcOffset();
                         incomingZoneOffset = moment(d, parseFormats, options.useStrict).utcOffset();
                         if (incomingZoneOffset !== currentZoneOffset) {
@@ -160,6 +161,8 @@
                         } else {
                             returnMoment = moment(d, parseFormats, options.useStrict).tz(options.timeZone);
                         }
+                        */
+                        returnMoment = moment.tz(d, parseFormats, options.useStrict, options.timeZone);
                     } else {
                         returnMoment = moment(d, parseFormats, options.useStrict);
                     }
