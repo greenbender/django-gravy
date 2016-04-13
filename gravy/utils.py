@@ -34,9 +34,12 @@ def epoch(dt):
 
 def datetime(e):
     """
-    Convert epoch datetime to current timezone aware datetime.
+    Convert epoch to a datetime. If USE_TZ is set convert to to the current
+    timezone, otherwise convert to naive localtime.
     """
-    return _datetime.fromtimestamp(e, timezone.get_current_timezone())
+    if settings.USE_TZ:
+        return _datetime.fromtimestamp(e, timezone.get_current_timezone())
+    return _datetime.fromtimestamp(e)
 
 
 def seconds_to_units(seconds):

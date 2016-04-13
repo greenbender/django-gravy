@@ -1,6 +1,8 @@
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
+from django.db import connections
+from django.conf import settings
 from django.contrib.messages.views import SuccessMessageMixin
 from django.views.generic import UpdateView, CreateView
 from django.forms.models import modelform_factory
@@ -60,8 +62,11 @@ class BetterRedirectView(RedirectView):
 
 
 class NextUrlMixin(object):
+    next_param = 'next'
     def get_redirect_url(self, *args, **kwargs):
-        return self.request.GET.get('next', '/')
+        return self.request.GET.get(self.next_param,
+            self.request.POST.get(self.next_param, '/')
+        )
     def get_success_url(self):
         return self.get_redirect_url()
 
@@ -73,7 +78,7 @@ class LastPageBase(object):
             self.lastpage_namespace,
             key
         ])
-        
+
 
 class LastPageMixin(LastPageBase):
     def get_lastpage_keys(self):
@@ -199,7 +204,10 @@ class ForeignModelMixin(object):
             elif hasattr(obj, self.foreign_field_name):
                 self.foreign_object = getattr(obj, self.foreign_field_name)
             else:
-                self.foreign_object = obj[self.foreign_field_name]
+                self.foreign_object = get_object_or_404(
+                    self.foreign_model,
+                    pk=obj[self.foreign_field_name]
+                )
 
         # get the instance from the provided instance pk
         elif self.foreign_object_pk is not None:
@@ -252,44 +260,6 @@ class ForeignModelMixin(object):
 
 class FlotMixin(JsonResponseMixin):
 
-    SECOND = 1
-    MINUTE = SECOND * 60
-    HOUR = MINUTE * 60
-    DAY = HOUR * 24
-    WEEK = DAY * 7
-
-    # helpers
-    @staticmethod
-    def _datetime(je):
-        return timezone.make_aware(
-            datetime.utcfromtimestamp(je / 1000), timezone.utc
-        )
-
-    @staticmethod
-    def _flotutc(dt):
-        return timegm(dt.utctimetuple()) * 1000
-
-    @staticmethod
-    def _flotutc_sql(expr):
-        return 'CAST(EXTRACT(EPOCH FROM %s AT TIME ZONE \'UTC\')*1000 AS BIGINT)' % expr
-    
-    @classmethod
-    def _flotutc_datetime_trunc_sql(cls, lookup_type, field_name):
-        return cls._flotutc_sql(
-            "DATE_TRUNC('%s', %s AT TIME ZONE \'UTC\')" % (lookup_type, field_name)
-        )
-
-    @classmethod
-    def _flotwidth(cls, unit):
-        ms = 1000
-        return {
-            'second': cls.SECOND * ms,
-            'minute': cls.MINUTE * ms,
-            'hour': cls.HOUR * ms,
-            'day': cls.DAY * ms,
-            'week': cls.WEEK * ms,
-        }[unit]
-
     def get_plot(self, context):
         return {
             'sequence': self.request.GET.get('sequence'),
@@ -332,11 +302,61 @@ class FlotMixin(JsonResponseMixin):
 
 # TODO: this is a work in progress
 class FlotTimeMixin(FlotMixin):
-    
+
+    SECOND = 1
+    MINUTE = SECOND * 60
+    HOUR = MINUTE * 60
+    DAY = HOUR * 24
+    WEEK = DAY * 7
     MIN_POINTS = 8
 
     plot_duration = timedelta(hours=24)
     plot_offsetx = timedelta(hours=1)
+
+    # helpers
+    @staticmethod
+    def _datetime(je):
+        return timezone.make_aware(
+            datetime.utcfromtimestamp(je / 1000), timezone.utc
+        )
+
+    @staticmethod
+    def _flotutc(dt):
+        return timegm(dt.utctimetuple()) * 1000
+
+    # XXX: the following is postgresql specific
+    def _flotutc_sql(self, field_name):
+        return 'CAST(EXTRACT(\'epoch\' FROM %s) * 1000 AS BIGINT)' % field_name
+
+    def _datetime_trunc_sql(self, lookup_type, field_name, tzname):
+        """
+        Reimplements the db backend datetime_trunc_sql operation. The postgres
+        backend fails to do make the truncated datetime timezone aware which
+        causes problems. We ensure that the truncated datetime is timezone
+        aware.
+        """
+        field_name, params = connections[self.model.objects.db].ops.datetime_trunc_sql(
+            lookup_type, field_name, tzname
+        )
+        sql, params1 = connections[self.model.objects.db].ops._convert_field_to_tz(field_name, tzname)
+        params.extend(params1)
+        return sql, params
+
+    def _flotutc_datetime_trunc_sql(self, lookup_type, field_name, tzname):
+        field_name, params = self._datetime_trunc_sql(lookup_type, field_name, tzname)
+        sql = self._flotutc_sql(field_name)
+        return sql, params
+
+    @classmethod
+    def _flotwidth(cls, unit):
+        ms = 1000
+        return {
+            'second': cls.SECOND * ms,
+            'minute': cls.MINUTE * ms,
+            'hour': cls.HOUR * ms,
+            'day': cls.DAY * ms,
+            'week': cls.WEEK * ms,
+        }[unit]
 
     def apply_queryset_limits(self, queryset):
 
@@ -372,7 +392,10 @@ class FlotTimeMixin(FlotMixin):
         plot['options']['xaxis']['min'] = self._flotutc(self.begin)
         plot['options']['xaxis']['max'] = self._flotutc(self.end + self.offsetx)
         plot['options']['xaxis']['mode'] = 'time'
-        plot['options']['xaxis']['timezone'] = 'browser'
+        if settings.USE_TZ:
+            plot['options']['xaxis']['timezone'] = timezone.get_current_timezone_name()
+        else:
+            plot['options']['xaxis']['timezone'] = 'browser'
         plot['options']['xaxis']['zoomRange'] = [1 * 60 * 1000, 4 * 7 * 24 * 60 * 60 * 1000]
         return plot
 
@@ -424,3 +447,13 @@ class FlotPieMixin(FlotMixin):
 class NullView(View):
     def dispatch(self, request, *args, **kwargs):
         return HttpResponse(status=204)
+
+
+class TimezoneChangeView(NextUrlMixin, RedirectView):
+    timezone_param = 'timezone'
+
+    def post(self, request, *args, **kwargs):
+        tz = request.POST.get(self.timezone_param)
+        if tz is not None:
+            request.session['django_timezone'] = tz
+        return super(TimezoneChangeView, self).post(request, *args, **kwargs)
