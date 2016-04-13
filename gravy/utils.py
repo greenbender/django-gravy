@@ -26,7 +26,10 @@ def epoch(dt):
     """
     Convert a datetime object to unix epoch timestamp.
     """
-    return int(time.mktime(dt.timetuple()))
+    if timezone.is_aware(dt):
+        return int(calendar.timegm(dt.utctimetuple()))
+    else:
+        return int(time.mktime(dt.timetuple()))
 
 
 def datetime(e):
