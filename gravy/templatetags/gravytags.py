@@ -77,3 +77,66 @@ def url_replace(context, **kwargs):
         else:
             dict_[name] = value
     return dict_.urlencode()
+
+
+_momentjs_format_map = {
+    'a': 'a', # approx
+    'A': 'A',
+    'b': 'MMM',
+    'c': 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ', # approx
+    'd': 'DD',
+    'D': 'ddd',
+    'e': 'z',
+    'f': 'h:mm', # approx
+    'F': 'MMMM',
+    'g': 'h',
+    'G': 'H',
+    'h': 'hh',
+    'H': 'HH',
+    'i': 'mm',
+    'I': '', # unsupported
+    'j': 'D',
+    'l': 'dddd',
+    'L': '', # unsupported
+    'm': 'MM',
+    'M': 'MMM',
+    'n': 'M',
+    'N': 'MMM', # approx
+    'o': 'Y', # ?
+    'O': 'ZZ',
+    'P': 'h:mm a', # approx
+    'r': 'ddd, D MMM YYYY HH:mm:ss ZZ',
+    's': 'ss',
+    'S': '', # unsupported
+    't': '', # unsupported
+    'T': 'z', # approx
+    'u': 'SSSSSS',
+    'U': 'X',
+    'w': 'e',
+    'W': 'W',
+    'y': 'YY',
+    'Y': 'YYYY',
+    'z': 'DDD',
+    'Z': '', # unsupported
+}
+
+
+def _momentjs_fmt(fmt):
+    output = []
+    for c in fmt:
+        output.append(_momentjs_format_map.get(c, c))
+    return ''.join(output)
+
+
+@register.simple_tag
+def momentjs_datefmt(fmt=None):
+    if fmt is None:
+        fmt = settings.DATETIME_FORMAT
+    return _momentjs_fmt(fmt)
+
+
+@register.simple_tag
+def momentjs_timefmt(fmt=None):
+    if fmt is None:
+        fmt = settings.TIME_FORMAT
+    return _momentjs_fmt(fmt)
