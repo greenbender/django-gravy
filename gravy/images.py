@@ -21,7 +21,7 @@ def load(fd):
 
 def ocr(img):
     return image_to_string(
-        img.resize((6*d for d in img.size), Image.NEAREST)
+        img.resize((2*d for d in img.size), Image.NEAREST)
     )
 
 
