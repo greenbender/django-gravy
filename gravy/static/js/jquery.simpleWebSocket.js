@@ -6,7 +6,8 @@
             namespace: '',
             reconnect: true,
             reconnectTimeout: 500,
-            autoConnect: true
+            autoConnect: true,
+            pingInterval: 30
         };
 
     /* helpers */
@@ -32,6 +33,8 @@
             this.uri = wsUri(this.options);
             if (this.options.autoConnect)
                 this.connect();
+            if (this.options.pingInterval)
+                this.ping();
             return this;
         },
 
@@ -55,11 +58,16 @@
         },
 
         send: function(event, data) {
-            var pkt = JSON.stringify({
-                'event': event,
-                'data': data,
-            });
-            this.socket.send(pkt);
+            var pkt = {};
+            pkt.event = event;
+            if (data !== undefined)
+                pkt.data = data;
+            this.socket.send(JSON.stringify(pkt));
+        },
+
+        ping: function() {
+            this.socket && this.send('ping');
+            setTimeout($.proxy(this.ping, this), this.options.pingInterval);
         },
 
         onOpen: function(event) {
