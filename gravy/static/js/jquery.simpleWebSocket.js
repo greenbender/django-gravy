@@ -31,10 +31,9 @@
         init: function() {
             this.$element = $(this.element);
             this.uri = wsUri(this.options);
+            this.pingInterval = this.options.pingInterval * 1000;
             if (this.options.autoConnect)
                 this.connect();
-            if (this.options.pingInterval)
-                this.ping();
             return this;
         },
 
@@ -66,22 +65,38 @@
         },
 
         ping: function() {
-            this.socket && this.send('ping');
-            setTimeout($.proxy(this.ping, this), this.options.pingInterval);
+            this.send('ping');
+            if (this.pingInterval)
+                this._pingTimeout = setTimeout($.proxy(this.ping, this), this.pingInterval);
+        },
+
+        pingStart: function() {
+            this._pingTimeout = setTimeout($.proxy(this.ping, this), this.pingInterval);
+        },
+
+        pingStop: function() {
+            if (this._pingTimeout !== undefined) {
+                clearTimeout(this._pingTimeout);
+                delete this._pingTimeout;
+            }
         },
 
         onOpen: function(event) {
             if (this.options.room)
                 this.send('join', this.options.room);
+            if (this.pingInterval)
+                this.pingStart();
         },
 
         onClose: function(event) {
+            this.pingStop();
             delete this.socket;
             if (this.reconnect)
                 setTimeout($.proxy(this.connect, this), this.options.reconnectTimeout);
         },
 
         onError: function(event) {
+            this.pingStop();
             delete this.socket;
             if (this.reconnect)
                 setTimeout($.proxy(this.connect, this), this.options.reconnectTimeout);
