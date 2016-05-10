@@ -177,6 +177,7 @@ class BootstrapDependsWidget(BootstrapCheckboxToggle, DependsWidget):
 
 class BootstrapDateRangePicker(DateTimeRangeInput):
     date_ranges = (
+        (300, '5 min'),
         (1800, '30 min'),
         (3600, '1 hr'),
         (5400, '1.5 hr'),
