@@ -43,7 +43,7 @@ class CsrfExemptMixin(object):
 class XFrameOptionsExemptMixin(object):
     @method_decorator(xframe_options_exempt)
     def dispatch(self, *args, **kwargs):
-        return super(XFrameOptionExemptMixin, self).dispatch(*args, **kwargs)
+        return super(XFrameOptionsExemptMixin, self).dispatch(*args, **kwargs)
 
 
 class SuperuserRequiredMixin(object):
