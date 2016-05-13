@@ -10,6 +10,7 @@ from django.http import JsonResponse, HttpResponse, Http404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic import RedirectView, View
 from django.core.exceptions import PermissionDenied
 from datetime import timedelta, datetime
@@ -35,6 +36,12 @@ class NeverCacheMixin(object):
 
 class CsrfExemptMixin(object):
     @method_decorator(csrf_exempt)
+    def dispatch(self, *args, **kwargs):
+        return super(CsrfExemptMixin, self).dispatch(*args, **kwargs)
+
+
+class XFrameOptionsExemptMixin(object):
+    @method_decorator(xframe_options_exempt)
     def dispatch(self, *args, **kwargs):
         return super(CsrfExemptMixin, self).dispatch(*args, **kwargs)
 
