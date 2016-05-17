@@ -1,2 +1,1 @@
-{% load gravytags %}
-<span{% if hidden|default:True %} style="display:none;"{% endif %} data-toggle="epoch" data-ws-toggle="true"{% if TIME_ZONE %} data-timezone="{{ TIME_ZONE }}"{% endif %} data-format="{% momentjs_datefmt format|default:None %}">{{ dt|date:'U' }}</span>
+{% load gravytags %}<span{% if hidden|default:True %} style="display:none;"{% endif %} data-toggle="epoch" data-ws-toggle="true"{% if TIME_ZONE %} data-timezone="{{ TIME_ZONE }}"{% endif %} data-format="{% momentjs_datefmt format|default:None %}">{{ dt|date:'U' }}</span>
