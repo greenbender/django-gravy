@@ -12,7 +12,7 @@ $.extend( true, $.fn.dataTable.defaults, {
         "sSearchPlaceholder": "Search",
         "sLengthMenu": "Show _MENU_"
     },
-    "aLengthMenu": [10, 20, 50, 100],
+    "aLengthMenu": [[10, 20, 50, 100, -1], [10, 20, 50, 100, "All"]],
     "iDisplayLength": 20
 } );
 
