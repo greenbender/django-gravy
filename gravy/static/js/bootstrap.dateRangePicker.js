@@ -43,6 +43,9 @@
                     if (diff < 0) html += '-'
                     if (hours) html += hours + 'h'
                     if (minutes || !hours) html += (hours ? ' ':'') + minutes + 'm'
+                    if (end.isBefore()) {
+                        html += '<span class="text-danger"> Ends in the past!</span>';
+                    }
                     html += '</strong>'
                 }
                 this.$info.html(html);
