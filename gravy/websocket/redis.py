@@ -1,6 +1,6 @@
+from geventwebsocket import WebSocketError
 from django_redis import get_redis_connection
 from .helpers import serialize, deserialize
-import six
 import gevent
 import fnmatch
 import os
@@ -30,8 +30,8 @@ class _RedisPubsubRegistry(object):
         pubsub.subscribe(self.sub_channel)
         pubsub.subscribe(self.unsub_channel)
         for msg in pubsub.listen():
-            # ignore our own psubscribes
-            if msg['type'] == 'psubscribe':
+            # ignore non-messages
+            if msg['type'] not in ('message', 'pmessage'):
                 continue
             # subscribe to channel
             if msg['channel'] == self.sub_channel:
@@ -42,7 +42,7 @@ class _RedisPubsubRegistry(object):
                 pubsub.punsubscribe(msg['data'])
                 continue
             # emit messages to namespace handlers
-            for channel, handlers in six.iteritems(self._registry):
+            for channel, handlers in self._registry.items():
                 if not fnmatch.fnmatch(msg['channel'], channel):
                     continue
                 for handler in handlers:
@@ -52,7 +52,7 @@ class _RedisPubsubRegistry(object):
         """
         Convienience method for publishing.
         """
-        self.conn.publish(channel, msg)
+        return self.conn.publish(channel, msg)
 
     def register(self, channel, handler):
         if channel not in self._registry:
@@ -60,7 +60,6 @@ class _RedisPubsubRegistry(object):
             self.conn.publish(self.sub_channel, channel)
         if handler not in self._registry[channel]:
             self._registry[channel].append(handler)
-        log.debug('%s has %d sockets' % (channel, len(self._registry[channel])))
 
     def unregister(self, channel, handler):
         if channel in self._registry:
@@ -96,7 +95,14 @@ class RedisMixin(object):
         RedisPubsubRegistry.publish(channel, serialize(data))
 
     def check_and_send(self, msg):
-        self.send(self.event, **deserialize(msg['data']))
+        try:
+            self.send(self.event, **deserialize(msg['data']))
+        except WebSocketError as e:
+            log.debug(e)
+        except Exception as e:
+            log.error(e)
+        finally:
+            self.stop()
 
 
 class RedisRoomsMixin(object):
