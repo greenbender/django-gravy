@@ -99,9 +99,9 @@ class RedisMixin(object):
             self.send(self.event, **deserialize(msg['data']))
         except WebSocketError as e:
             log.debug(e)
+            self.stop()
         except Exception as e:
             log.error(e)
-        finally:
             self.stop()
 
 
