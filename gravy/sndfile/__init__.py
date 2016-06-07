@@ -78,6 +78,9 @@ class SndFile(object):
         if self._sndfile is None:
             raise SndFileError(sf_strerror(self._sndfile))
 
+    def __getattr__(self, name):
+        return getattr(self._sfinfo, name)
+
     def __del__(self):
         self.close()
 
