@@ -1,5 +1,5 @@
 from django.forms.fields import *
-from django.forms.models import ModelMultipleChoiceField
+from django.forms.models import ModelChoiceField, ModelMultipleChoiceField
 from django.core.files.storage import DefaultStorage
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
@@ -25,7 +25,9 @@ log = logging.getLogger('gravy.forms.fields')
 __all__ = [
     'NamedMultiValueField', 'RepeatNamedMultiValueField', 'SavedFileField',
     'ParsedURLField', 'SerializedDateTimeField',
-    'SerializedModelMultipleChoiceField', 'SeparatedFieldMixin',
+    'SerializedModelMultipleChoiceField', 'ModelChoiceLabelMixin',
+    'ModelChoiceAltLabelField', 'ModelMultipleChoiceAltLabelField',
+    'SerializedModelMultipleChoiceAltLabelField', 'SeparatedFieldMixin',
     'SeparatedChoiceField', 'SeparatedCharField', 'FilePermissionsField',
     'DateTimeRangeField', 'SerializedDateTimeRangeField', 'MultipleFileField',
     'SchemaParseError', 'validate_json', 'FormGenerator', 'normalise_schema',
@@ -172,6 +174,26 @@ class SerializedModelMultipleChoiceField(ModelMultipleChoiceField):
     def clean(self, value):
         qs = super(SerializedModelMultipleChoiceField, self).clean(value)
         return [object.pk for object in qs]
+
+
+class ModelChoiceLabelMixin(object):
+    label_attr = None
+    def label_from_instance(self, obj):
+        if self.label_attr is not None:
+            return getattr(obj, self.label_attr)
+        return super(ModelChoiceLabelMixin, self).label_form_instance(obj)
+
+
+class ModelChoiceAltLabelField(ModelChoiceLabelMixin, ModelChoiceField):
+    pass
+
+
+class ModelMultipleChoiceAltLabelField(ModelChoiceLabelMixin, ModelMultipleChoiceField):
+    pass
+
+
+class SerializedModelMultipleChoiceAltLabelField(ModelChoiceLabelMixin, SerializedModelMultipleChoiceField):
+    pass
 
 
 class FilePermissionsField(CharField):

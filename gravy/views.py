@@ -143,17 +143,36 @@ class AutoSuccessMessageMixin(SuccessMessageMixin):
         return super(AutoSuccessMessageMixin, self).get_success_message(cleaned_data)
 
 
-class ModelFormWidgetMixin(object):
+class ModelFormFactoryMixin(object):
+    exclude = None
+    formfield_callback = None
+    widgets = None
+    localized_fields = None
+    labels = None
+    help_texts = None
+    error_messages = None
+    field_classes = None
+
     def get_form_class(self):
         if self.form_class:
-            return super(ModelFormWidgetMixin, self).get_form_class()
+            return super(ModelFormFactoryMixin, self).get_form_class()
         if self.model is not None:
             model = self.model
         elif hasattr(self, 'object') and self.object is not None:
             model = self.object.__class__
         else:
             model = self.get_queryset().model
-        return modelform_factory(model, fields=self.fields, widgets=self.widgets)
+        return modelform_factory(model,
+            fields=self.fields,
+            exclude=self.exclude,
+            formfield_callback=self.formfield_callback,
+            widgets=self.widgets,
+            localized_fields=self.localized_fields,
+            labels=self.labels,
+            help_texts=self.help_texts,
+            error_messages=self.error_messages,
+            field_classes=self.field_classes
+        )
 
 
 class BulkOperationMixin(object):
