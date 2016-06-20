@@ -250,7 +250,6 @@ class ParsedURLField(URLField):
                 fullpath += '?' + value['query']
             fullpath += value['fragment']
             value['fullpath'] = fullpath
-            log.debug(value)
         return value
 
 
@@ -318,14 +317,18 @@ class FormGenerator(object):
     def get_form_class(self):
         self.formfields = OrderedDict()
         for field in self.__fields:
-            self.formfields[field['name']] = self.create_field(field)
+            # ignore empty fields
+            if field:
+                self.formfields[field['name']] = self.create_field(field)
         return type('DynamicForm', (BetterForm,), self.formfields)
 
     @classmethod
     def validate(cls, fields):
         validate_json(fields, {'type': 'array'})
         for field in fields:
-            cls.validate_field(field)
+            # ignore empty fields
+            if field:
+                cls.validate_field(field)
 
     @staticmethod
     def get_field_options(field):
@@ -595,7 +598,9 @@ class FormGenerator(object):
     def create_field_for_multiple(self, field, options):
         options['fields'] = []
         for subfield in field['fields']:
-            options['fields'].append((subfield['name'], self.create_field(subfield)))
+            # ignore empty subfields
+            if subfield:
+                options['fields'].append((subfield['name'], self.create_field(subfield)))
         return NamedMultiValueField(**options)
 
     @classmethod
@@ -609,12 +614,16 @@ class FormGenerator(object):
         }
         validate_json(field, schema)
         for subfield in field['fields']:
-            cls.validate_field(subfield)
+            # ignore empty subfields
+            if subfield:
+                cls.validate_field(subfield)
 
     def create_field_for_repeat(self, field, options):
         options['fields'] = []
         for subfield in field['fields']:
-            options['fields'].append((subfield['name'], self.create_field(subfield)))
+            # ignore empty subfields
+            if subfield:
+                options['fields'].append((subfield['name'], self.create_field(subfield)))
         return RepeatNamedMultiValueField(**options)
 
     @classmethod
@@ -628,7 +637,9 @@ class FormGenerator(object):
         }
         validate_json(field, schema)
         for subfield in field['fields']:
-            cls.validate_field(subfield)
+            # ignore empty subfields
+            if subfield:
+                cls.validate_field(subfield)
 
     @staticmethod
     def create_field_for_url(field, options):
@@ -715,7 +726,9 @@ class FieldsetFormGenerator(FormGenerator):
         self.formfields = OrderedDict()
         self.fieldsets = []
         for fieldset in self.__fieldsets:
-            self.fieldsets.append(self.create_fieldset(fieldset))
+            # ignore empty fieldsets
+            if fieldset:
+                self.fieldsets.append(self.create_fieldset(fieldset))
         class Meta:
             fieldsets = tuple(self.fieldsets)
         self.formfields['Meta'] = Meta
@@ -725,7 +738,9 @@ class FieldsetFormGenerator(FormGenerator):
     def validate(cls, fieldsets):
         validate_json(fieldsets, {'type': 'array'})
         for fieldset in fieldsets:
-            cls.validate_fieldset(fieldset)
+            # ignore empty fieldsets
+            if fieldset:
+                cls.validate_fieldset(fieldset)
 
     @staticmethod
     def get_fieldset_options(fieldset):
