@@ -2,9 +2,11 @@
 {{ field }}
 {% else %}
 <div class="form-group{% if field.errors %} has-error{% endif %}"{% if field.help_text %} title="{{ field.help_text }}"{% endif %}>
-    {% if field.label %}<label class="control-label col-xs-3" for="{{ field.id_for_label }}">{{ field.label }}</label>{% endif %}
-    <div class="{% if not field.label %}col-xs-offset-3 {% endif %}col-xs-9"{% include "gravy/error_popover_snippet.html" with errors=field.errors %}>
+    {% with lc=label_cols|default:3 fc=label_cols|default:3|add:-12 %}
+    {% if field.label %}<label class="control-label col-xs-{{ lc }}" for="{{ field.id_for_label }}">{{ field.label }}</label>{% endif %}
+    <div class="{% if not field.label %}col-xs-offset-{{ lc }} {% endif %}col-xs{{ fc }}"{% include "gravy/error_popover_snippet.html" with errors=field.errors %}>
         {{ field }}
     </div>
+    {% endwith %}
 </div>
 {% endif %}
