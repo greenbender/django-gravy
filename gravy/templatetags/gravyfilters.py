@@ -13,3 +13,12 @@ def humanize_seconds(value):
     if value < 0:
         qty = -qty 
     return "{0} {1}".format(qty, unit)
+
+
+@register.filter(name='getattr', is_safe=False)
+def _getattr(value, arg):
+    try:
+        return value[arg]
+    except (KeyError, TypeError, IndexError):
+        pass
+    return getattr(value, arg)
