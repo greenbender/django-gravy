@@ -236,7 +236,7 @@ class ParsedURLField(URLField):
     }
 
     def clean(self, value):
-        value = super(ParsedURLField, self).clean(value)
+        fullurl = value = super(ParsedURLField, self).clean(value)
         if value:
             # we know is it sane because URLField says so
             split = urlparse.urlsplit(value)
@@ -250,6 +250,7 @@ class ParsedURLField(URLField):
                 fullpath += '?' + value['query']
             fullpath += value['fragment']
             value['fullpath'] = fullpath
+            value['fullurl'] = fullurl
         return value
 
 
