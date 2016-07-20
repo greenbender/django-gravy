@@ -15,15 +15,15 @@ log = logging.getLogger('gravy.db.models.crypto')
 
 def base36encode(number):
     number = int(number)
-    alphabet, base36 = '0123456789abcdefghijklmnopqrstuvwxyz', ''
+    alphabet, base36 = '0123456789abcdefghijklmnopqrstuvwxyz', []
     while number:
         number, i = divmod(number, 36)
-        base36 = alphabet[i] + base36
-    return base36 or alphabet[0]
+        base36.insert(0, alphabet[i])
+    return ''.join(base36) or alphabet[0]
 
 
 def base36decode(numstr):
-    return int(numstr,36)
+    return int(numstr, 36)
 
 
 def encrypted_pk_to_pk(f):
