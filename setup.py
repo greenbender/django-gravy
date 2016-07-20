@@ -19,7 +19,8 @@ setup(
     install_requires = [
         'django-betterforms',
         'python-magic',
-        'pyfifo'
+        'pyfifo',
+        'pycrypto',
     ],
     include_package_data=True,
     license='BSD License',
