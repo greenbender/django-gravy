@@ -19,7 +19,8 @@ log = logging.getLogger('gravy.forms.theme.bootstrap')
 
 __all__ = [
     'BootstrapTextInput', 'BootstrapTextarea', 'BootstrapNumberInput',
-    'BootstrapSelect', 'BootstrapSeparatedSelect', 'BootstrapDateTimePicker',
+    'BootstrapSelect', 'BootstrapSelectMultiple', 'BootstrapSeparatedSelect',
+    'BootstrapSeparatedSelectMultiple', 'BootstrapDateTimePicker',
     'BootstrapSerializedDateTimePicker', 'BootstrapFileInput',
     'BootstrapCheckboxToggle', 'BootstrapCombobox', 'BootstrapDateRangePicker',
     'BootstrapSeparatedTextarea', 'BootstrapMultipleFileInput',
@@ -86,6 +87,10 @@ class BootstrapParsedURLInput(OptionalMixin, FormControlMixin, BootstrapMixin, P
 
 
 class BootstrapSeparatedSelect(FormControlMixin, BootstrapMixin, SeparatedSelect):
+    pass
+
+
+class BootstrapSeparatedSelectMultiple(FormControlMixin, BootstrapMixin, SeparatedSelectMultiple):
     pass
 
 
@@ -241,7 +246,9 @@ class BootstrapTheme(Theme):
         (DateTimeRangeField, BootstrapDateRangePicker),
         (SerializedDateTimeField, BootstrapSerializedDateTimePicker),
         (ModelMultipleChoiceField, BootstrapSelectMultiple),
+        (MultipleChoiceField, BootstrapSelectMultiple),
         (SeparatedChoiceField, BootstrapSeparatedSelect),
+        (SeparatedMultipleChoiceField, BootstrapSeparatedSelectMultiple),
         (URLField, BootstrapURLInput),
         (ParsedURLField, BootstrapParsedURLInput),
         (DependsField, BootstrapDependsWidget),

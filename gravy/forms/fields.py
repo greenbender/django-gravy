@@ -28,12 +28,13 @@ __all__ = [
     'SerializedModelMultipleChoiceField', 'ModelChoiceLabelMixin',
     'ModelChoiceAltLabelField', 'ModelMultipleChoiceAltLabelField',
     'SerializedModelMultipleChoiceAltLabelField', 'SeparatedFieldMixin',
-    'SeparatedChoiceField', 'SeparatedCharField', 'FilePermissionsField',
-    'DateTimeRangeField', 'SerializedDateTimeRangeField', 'MultipleFileField',
-    'SchemaParseError', 'validate_json', 'FormGenerator', 'normalise_schema',
-    'form_from_schema', 'FieldsetMixin', 'FieldsetFormGenerator',
-    'fieldsetform_from_schema', 'fieldsetform_from_schemas', 'FormSchemaField',
-    'FieldsetFormSchemaField', 'DependsField',
+    'SeparatedChoiceField', 'SeparatedMultipleChoiceField',
+    'SeparatedCharField', 'FilePermissionsField', 'DateTimeRangeField',
+    'SerializedDateTimeRangeField', 'MultipleFileField', 'SchemaParseError',
+    'validate_json', 'FormGenerator', 'normalise_schema', 'form_from_schema',
+    'FieldsetMixin', 'FieldsetFormGenerator', 'fieldsetform_from_schema',
+    'fieldsetform_from_schemas', 'FormSchemaField', 'FieldsetFormSchemaField',
+    'DependsField',
 ]
 
 # proxy django.forms.fields
@@ -263,6 +264,10 @@ class SeparatedFieldMixin(object):
 
 class SeparatedChoiceField(SeparatedFieldMixin, ChoiceField):
     widget = SeparatedSelect
+
+
+class SeparatedMultipleChoiceField(SeparatedFieldMixin, MultipleChoiceField):
+    widget = SeparatedSelectMultiple
 
 
 # TODO: add validation that it is a list etc
@@ -565,6 +570,66 @@ class FormGenerator(object):
         initial = field.get('initial', sentinel)
         if initial is not sentinel and initial not in [c['value'] for c in field['choices']]:
             raise SchemaParseError('initial must match one of the values given in choices.', field)
+
+    @staticmethod
+    def create_field_for_multipleselect(field, options):
+        options['choices'] = [(c['value'], c['name']) for c in field['choices']]
+        return MultipleChoiceField(**options)
+
+    @staticmethod
+    def validate_field_for_multipleselect(field, options):
+        schema = {
+            'type': 'object',
+            'properties': {
+                'type': {'enum': ['multipleselect']},
+                'initial': {'type': 'array'},
+                'choices': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'object',
+                        'properties': {
+                            'name': {'type': 'string'},
+                            'value': {},
+                        }, 'required': ['name', 'value']
+                    }
+                }
+            }, 'required': ['type', 'choices']
+        }
+        validate_json(field, schema)
+        initial = field.get('initial', [])
+        for v in initial:
+            if v not in  [c['value'] for c in field['choices']]:
+                raise SchemaParseError('initial must be a subset the values given in choices.', field)
+
+    @staticmethod
+    def create_field_for_multipleselectlist(field, options):
+        options['choices'] = [(c['value'], c['name']) for c in field['choices']]
+        return SeparatedMultipleChoiceField(**options)
+
+    @staticmethod
+    def validate_field_for_multipleselectlist(field, options):
+        schema = {
+            'type': 'object',
+            'properties': {
+                'type': {'enum': ['multipleselectlist']},
+                'initial': {'type': 'array'},
+                'choices': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'object',
+                        'properties': {
+                            'name': {'type': 'string'},
+                            'value': {'type': 'array'},
+                        }, 'required': ['name', 'value']
+                    }
+                }
+            }, 'required': ['type', 'choices']
+        }
+        validate_json(field, schema)
+        initial = field.get('initial', [])
+        for v in initial:
+            if v not in  [c['value'] for c in field['choices']]:
+                raise SchemaParseError('initial must be a subset the values given in choices.', field)
 
     @staticmethod
     def create_field_for_checkbox(field, options):
