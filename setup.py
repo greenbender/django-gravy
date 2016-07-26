@@ -21,6 +21,8 @@ setup(
         'python-magic',
         'pyfifo',
         'pycrypto',
+        'beautifulsoup4',
+        'jsonfield',
     ],
     include_package_data=True,
     license='BSD License',
