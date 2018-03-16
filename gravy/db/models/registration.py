@@ -4,7 +4,7 @@ log = logging.getLogger('gravy.db.models')
 
 class CurrentUserFieldRegistry(object):
     _registry = {}
-    
+
     def add_field(self, model, field):
         reg = self.__class__._registry.setdefault(model, [])
         reg.append(field)
