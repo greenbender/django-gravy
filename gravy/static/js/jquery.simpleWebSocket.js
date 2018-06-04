@@ -16,7 +16,6 @@
         uri.href = window.location.href;
         uri.protocol = (uri.protocol == 'https:') ? 'wss:' : 'ws:';
         uri.pathname = options.basePath + '/' + options.namespace;
-        uri.search = uri.hash = '';
         return uri.href;
     }
 
