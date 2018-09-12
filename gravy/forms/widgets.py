@@ -33,6 +33,7 @@ class NamedMultiWidget(MultiWidget):
     widgets = ()
     subwidget_name_format = '{0}.{1}'
     classname = 'named-multi-widget'
+    template_name = 'gravy/forms/widgets/namedmultiwidget.html'
 
     class Media:
         css = {
@@ -47,13 +48,14 @@ class NamedMultiWidget(MultiWidget):
         widgets = self.named_widgets.values()
         super(NamedMultiWidget, self).__init__(widgets, attrs=attrs)
 
-    def render(self, name, value, attrs=None):
+    def get_context(self, name, value, attrs=None):
+        context = super(NamedMultiWidget, self).get_context(name, value, attrs)
         if self.is_localized:
             for widget in self.widgets:
                 widget.is_localized = self.is_localized
         if not isinstance(value, list):
             value = self.decompress(value)
-        output = []
+        subwidgets = []
         final_attrs = self.build_attrs(attrs)
         id_ = final_attrs.get('id', None)
         for i, subwidget in enumerate(self.named_widgets.items()):
@@ -64,9 +66,13 @@ class NamedMultiWidget(MultiWidget):
                 widget_value = value[i]
             except IndexError:
                 widget_value = None
-            widget_name = self.subwidget_name_format.format(name, widget_name)
-            output.append(widget.render(widget_name, widget_value, widget_attrs))
-        return mark_safe(self.format_output(output, attrs=final_attrs))
+            subwidget_name = self.subwidget_name_format.format(name, widget_name)
+            output = widget.get_context(subwidget_name, widget_value, widget_attrs)['widget']
+            label = self._labels.get(widget_name,'')
+            output['label_tag'] = {'label': self._labels.get(widget_name,''), 'attrs':flatatt({'title':self._help_texts.get(widget_name)})}
+            subwidgets.append(output)
+        context['widget']['subwidgets'] = subwidgets
+        return context
 
     def id_for_label(self, id_):
         return id_
@@ -77,32 +83,6 @@ class NamedMultiWidget(MultiWidget):
             widget_name = self.subwidget_name_format.format(name, widget_name)
             value.append(widget.value_from_datadict(data, files, widget_name))
         return value
-
-    def format_output(self, rendered_widgets, attrs=None):
-        final_attrs = {'class': self.classname}
-        id_ = attrs.get('id')
-        if id_:
-            final_attrs['id'] = id_
-        rendered = []
-        hidden = []
-        for i, subwidget in enumerate(self.named_widgets.items()):
-            widget_name, widget = subwidget
-            if widget.is_hidden:
-                hidden.append(rendered_widgets[i])
-            else:
-                label = self._labels.get(widget_name, '')
-                if label:
-                    label_attrs = {}
-                    title = self._help_texts.get(widget_name)
-                    if title:
-                        label_attrs['title'] = title
-                    label = format_html('<label {}>{}</label>', flatatt(label_attrs), label)
-                rendered.append(format_html('<li>{}{}</li>', label, rendered_widgets[i]))
-        return format_html('<ul {}>{}{}</ul>',
-            flatatt(final_attrs),
-            mark_safe(''.join(hidden)),
-            mark_safe(''.join(rendered))
-        )
 
     def decompress(self, value):
         if value:
@@ -158,18 +138,18 @@ class RepeatNamedMultiWidget(NamedMultiWidget):
             value.append(super(RepeatNamedMultiWidget, self).value_from_datadict(data, files, name))
         return value
 
-    def render(self, name, values, attrs=None):
+    def render(self, name, value, attrs=None):
         name += '[]'
         final_attrs = self.build_attrs(attrs)
         widget_attrs = dict(final_attrs)
         widget_attrs.pop('id', None)
         template_value = self._initial
-        if not isinstance(values, list):
-            template_value, values = values, []
+        if not isinstance(value, list):
+            template_value, value = value, []
         template = super(RepeatNamedMultiWidget, self).render(name, template_value, widget_attrs)
         rendered_widgets = []
-        for i, value in enumerate(values):
-            rendered_widgets.append(super(RepeatNamedMultiWidget, self).render(name, value, widget_attrs))
+        for i, val in enumerate(value):
+            rendered_widgets.append(super(RepeatNamedMultiWidget, self).render(name, val, widget_attrs))
         return mark_safe(self.format_output_repeat(template, rendered_widgets, attrs=final_attrs))
 
     def format_output_repeat(self, template, rendered_widgets, attrs=None):
@@ -208,11 +188,11 @@ class ParsedURLInput(URLInput):
         'fragment',
     )
 
-    def render(self, name, value, attrs=None):
+    def get_context(self, name, value, attrs=None):
         if isinstance(value, dict):
             split = [value.get(n) for n in self.attribute_map]
             value = urlparse.urlunsplit(split)
-        return super(ParsedURLInput, self).render(name, value, attrs=attrs)
+        return super(ParsedURLInput, self).get_context(name, value, attrs=attrs)
 
 
 class SeparatedBaseMixin(object):
@@ -237,9 +217,9 @@ class SeparatedBaseMixin(object):
 
 class SeparatedWidgetMixin(SeparatedBaseMixin):
 
-    def render(self, name, value, attrs=None, **kwargs):
+    def get_context(self, name, value, attrs=None, **kwargs):
         value = self._unsplit_value(value)
-        return super(SeparatedWidgetMixin, self).render(name, value, attrs=attrs, **kwargs)
+        return super(SeparatedWidgetMixin, self).get_context(name, value, attrs=attrs, **kwargs)
 
     def value_from_datadict(self, data, files, name):
         value = super(SeparatedWidgetMixin, self).value_from_datadict(data, files, name)
@@ -248,10 +228,10 @@ class SeparatedWidgetMixin(SeparatedBaseMixin):
 
 class SeparatedMultipleWidgetMixin(SeparatedBaseMixin):
 
-    def render(self, name, value, attrs=None, **kwargs):
+    def get_context(self, name, value, attrs=None, **kwargs):
         if isinstance(value, (list, tuple)):
             value = [self._unsplit_value(v) for v in value]
-        return super(SeparatedMultipleWidgetMixin, self).render(name, value, attrs=attrs, **kwargs)
+        return super(SeparatedMultipleWidgetMixin, self).get_context(name, value, attrs=attrs, **kwargs)
 
     def value_from_datadict(self, data, files, name):
         value = super(SeparatedMultipleWidgetMixin, self).value_from_datadict(data, files, name)
@@ -268,10 +248,9 @@ class SeparatedSelect(SeparatedWidgetMixin, Select):
                 choice = (self.token.join([unicode(c) for c in choice[0]]), choice[1])
             yield choice
 
-    def render(self, name, value, attrs=None, choices=()):
-        choices = list(self._collapse_choices(choices))
+    def get_context(self, name, value, attrs=None):
         self.choices = list(self._collapse_choices(self.choices))
-        return super(SeparatedSelect, self).render(name, value, attrs=attrs, choices=choices)
+        return super(SeparatedSelect, self).get_context(name, value, attrs=attrs)
 
 
 class SeparatedSelectMultiple(SeparatedMultipleWidgetMixin, SelectMultiple):
@@ -282,10 +261,9 @@ class SeparatedSelectMultiple(SeparatedMultipleWidgetMixin, SelectMultiple):
                 choice = (self.token.join([unicode(c) for c in choice[0]]), choice[1])
             yield choice
 
-    def render(self, name, value, attrs=None, choices=()):
-        choices = list(self._collapse_choices(choices))
+    def get_context(self, name, value, attrs=None):
         self.choices = list(self._collapse_choices(self.choices))
-        return super(SeparatedSelectMultiple, self).render(name, value, attrs=attrs, choices=choices)
+        return super(SeparatedSelectMultiple, self).get_context(name, value, attrs=attrs)
 
 
 class SeparatedTextInput(SeparatedWidgetMixin, TextInput):
@@ -306,9 +284,9 @@ class SerializedDateTimeInput(DateTimeInput):
 
 class MultipleFileInput(FileInput):
 
-    def render(self, name, value, attrs=None):
+    def get_context(self, name, value, attrs=None):
         attrs['multiple'] = 'multiple'
-        return super(MultipleFileInput, self).render(name, value, attrs)
+        return super(MultipleFileInput, self).get_context(name, value, attrs)
 
     def value_from_datadict(self, data, files, name):
         if hasattr(files, 'getlist'):

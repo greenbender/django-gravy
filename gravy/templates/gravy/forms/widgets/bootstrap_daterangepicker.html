@@ -1,0 +1,24 @@
+{% spaceless %}
+
+    <div {{ widget.final_attrs }}>
+        <ul class="named-multi-widget">
+            {% for widget in widget.subwidgets %}
+            <li>
+                {% if not widget.is_hidden %}
+                    <label {{ widget.label_tag.attr }}>{{ widget.label_tag.label }}</label>
+                {% endif %}
+                {% include widget.template_name %}
+            </li>
+            {% endfor %}
+        </ul>
+        <div>
+            <div class="info"></div>
+            <div class="btn-group">
+                {% for button in widget.date_buttons %}
+                    <button {{ button.attr }}>{{ button.name }}</button>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endspaceless %}
+

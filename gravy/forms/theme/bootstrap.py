@@ -50,12 +50,12 @@ class FormControlMixin(object):
 
 class OptionalMixin(object):
 
-    def render(self, name, value, attrs=None):
+    def get_context(self, name, value, attrs=None):
         if not self.is_required:
             if attrs is None:
                 attrs = {}
             attrs['placeholder'] = 'Optional'
-        return super(OptionalMixin, self).render(name, value, attrs=attrs)
+        return super(OptionalMixin, self).get_context(name, value, attrs=attrs)
 
 
 class BootstrapTextInput(OptionalMixin, FormControlMixin,  BootstrapMixin, TextInput):
@@ -181,6 +181,7 @@ class BootstrapDependsWidget(BootstrapCheckboxToggle, DependsWidget):
 
 
 class BootstrapDateRangePicker(DateTimeRangeInput):
+    template_name = 'gravy/forms/widgets/bootstrap_daterangepicker.html'
     date_ranges = (
         (300, '5 min'),
         (1800, '30 min'),
@@ -203,23 +204,17 @@ class BootstrapDateRangePicker(DateTimeRangeInput):
     def get_date_ranges(self):
         return self.date_ranges
 
-    def format_output(self, rendered_widgets, attrs=None):
+    def get_context(self, name, values, attrs=None):
+        context = super(BootstrapDateRangePicker, self).get_context(name, values, attrs=attrs)
         final_attrs = {'data-toggle': 'dateRangePicker'}
         if self.warn_start_past:
             final_attrs['data-warn-start-past'] = self.warn_start_past
         if self.warn_duration:
             final_attrs['data-warn-duration'] = self.warn_duration
-        btns = ''.join([
-            format_html(
-                '<button class="btn btn-default" data-value="{}">{}</button>', v, n
-            ) for v, n in self.get_date_ranges()
-        ])
-        output = super(BootstrapDateRangePicker, self).format_output(rendered_widgets, attrs=attrs)
-        return format_html('<div {}>{}<div><div class="info"></div><div class="btn-group">{}</div></div></div>',
-            flatatt(final_attrs),
-            output,
-            mark_safe(btns)
-        )
+        date_btns = [{'attr': flatatt({'class':'btn btn-default', 'data-value':v}), 'name':n} for v,n in self.get_date_ranges()]
+        context['widget']['final_attrs']=flatatt(final_attrs)
+        context['widget']['date_buttons'] = date_btns
+        return context
 
 
 class BootstrapMultipleFileInput(OptionalMixin, FormControlMixin, BootstrapMixin, MultipleFileInput):
