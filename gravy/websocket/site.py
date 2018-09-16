@@ -18,4 +18,4 @@ def ws(request, namespace=None):
     return HttpResponse()
 
 
-urls = ([url(r'^(?P<namespace>\w+)$', ws)])
+urls = [url(r'^(?P<namespace>\w+)$', ws)]

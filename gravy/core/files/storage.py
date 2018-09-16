@@ -19,7 +19,7 @@ class HashedFileSystemStorage(FileSystemStorage):
             self.algorithm = algorithm
         super(HashedFileSystemStorage, self).__init__(*args, **kwargs)
 
-    def get_available_name(self, name):
+    def get_available_name(self, name, max_length=None):
         return name
 
     def hash_to_name(self, hash):
