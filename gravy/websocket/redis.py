@@ -29,24 +29,27 @@ class _RedisPubsubRegistry(object):
         pubsub = self.conn.pubsub()
         pubsub.subscribe(self.sub_channel)
         pubsub.subscribe(self.unsub_channel)
-        for msg in pubsub.listen():
-            # ignore non-messages
-            if msg['type'] not in ('message', 'pmessage'):
-                continue
-            # subscribe to channel
-            if msg['channel'] == self.sub_channel:
-                pubsub.psubscribe(msg['data'])
-                continue
-            # unsubscribe from channel
-            if msg['channel'] == self.unsub_channel:
-                pubsub.punsubscribe(msg['data'])
-                continue
-            # emit messages to namespace handlers
-            for channel, handlers in self._registry.items():
-                if not fnmatch.fnmatch(msg['channel'], channel):
+        try:
+            for msg in pubsub.listen():
+                # ignore non-messages
+                if msg['type'] not in ('message', 'pmessage'):
                     continue
-                for handler in handlers:
-                    handler.check_and_send(msg)
+                # subscribe to channel
+                if msg['channel'] == self.sub_channel:
+                    pubsub.psubscribe(msg['data'])
+                    continue
+                # unsubscribe from channel
+                if msg['channel'] == self.unsub_channel:
+                    pubsub.punsubscribe(msg['data'])
+                    continue
+                # emit messages to namespace handlers
+                for channel, handlers in self._registry.items():
+                    if not fnmatch.fnmatch(msg['channel'], channel):
+                        continue
+                    for handler in handlers:
+                        handler.check_and_send(msg)
+        except ConnectionError:
+            pass
 
     def publish(self, channel, msg):
         """
