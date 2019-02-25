@@ -1,0 +1,22 @@
+{% spaceless %}
+    <ul {% include "django/forms/widgets/attrs.html" %}>
+        {% for widget in widget.rendered_widgets %}
+            <li>
+                <span class="repeat-named-multi-widget-remove"></span>
+                <ul class="named-multi-widget">
+                    {% for widget in widget.subwidgets %}
+                        <li>
+                            {% if not widget.is_hidden %}
+                                <label {{ widget.label_tag.attr }}>
+                                    {{ widget.label_tag.label }}
+                                </label>
+                            {% endif %}
+                            {% include widget.template_name %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </li>
+        {% endfor %}
+        <span class="repeat-named-multi-widget-add"></span>
+    </ul>
+{% endspaceless %}

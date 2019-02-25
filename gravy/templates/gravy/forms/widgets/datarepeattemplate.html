@@ -1,0 +1,15 @@
+{% spaceless %}
+<li>
+    <span class="repeat-named-multi-widget-remove"></span>
+    <ul class="named-multi-widget">
+        {% for widget in widget.subwidgets %}
+        <li>
+            {% if not widget.is_hidden %}
+                <label {{ widget.label_tag.attr }}>{{ widget.label_tag.label }}</label>
+            {% endif %}
+            {% include widget.template_name %}
+        </li>
+    {% endfor %}
+    </ul>
+</li>
+{% endspaceless %}

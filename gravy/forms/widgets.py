@@ -95,18 +95,16 @@ class RepeatNamedMultiWidget(NamedMultiWidget):
 
     widget_class = 'repeat-named-multi-widget'
     toggle = 'repeatNamedMultiWidget'
+    template_name = 'gravy/forms/widgets/repeatnamedmultiwidget.html'
+    repeat_template_name = 'gravy/forms/widgets/datarepeattemplate.html'
+    _nin_re = re.compile(r'(?P<name>[^\[]+)\[(?P<index>\d+)\](?P<next>.*)')
 
     class Media:
         css = {
             'all': ('css/jquery.repeatNamedMultiWidget.css',)
         }
         js = ('js/jquery.repeatNamedMultiWidget.js',)
-
-    _id_fmt = ' id="{id}"'
-    _ul_fmt = '<ul{id} class="{classname}" data-toggle="{toggle}" data-repeat-template="{template}">{subwidgets}<span class="{classname}-add"></span></ul>'
-    _li_fmt = '<li><span class="{classname}-remove"></span>{subwidget}</li>'
-    _nin_re = re.compile(r'(?P<name>[^\[]+)\[(?P<index>\d+)\](?P<next>.*)')
-
+    
     def _get_lists(self, d):
         if hasattr(d, 'lists'):
             return d.lists()
@@ -138,7 +136,7 @@ class RepeatNamedMultiWidget(NamedMultiWidget):
             value.append(super(RepeatNamedMultiWidget, self).value_from_datadict(data, files, name))
         return value
 
-    def render(self, name, value, attrs=None):
+    def get_context(self, name, value, attrs=None):
         name += '[]'
         final_attrs = self.build_attrs(attrs)
         widget_attrs = dict(final_attrs)
@@ -146,26 +144,17 @@ class RepeatNamedMultiWidget(NamedMultiWidget):
         template_value = self._initial
         if not isinstance(value, list):
             template_value, value = value, []
-        template = super(RepeatNamedMultiWidget, self).render(name, template_value, widget_attrs)
+        context = super(RepeatNamedMultiWidget, self).get_context(name, template_value, widget_attrs)
+        context['widget']['attrs']['class']= self.widget_class
+        context['widget']['attrs']['data-toggle']=self.toggle
+        repeat_template = self._render(self.repeat_template_name, context)
+        context['widget']['attrs']['data-repeat-template']= escape(repeat_template)
         rendered_widgets = []
         for i, val in enumerate(value):
-            rendered_widgets.append(super(RepeatNamedMultiWidget, self).render(name, val, widget_attrs))
-        return mark_safe(self.format_output_repeat(template, rendered_widgets, attrs=final_attrs))
-
-    def format_output_repeat(self, template, rendered_widgets, attrs=None):
-        if self.is_hidden:
-            return ''.join(rendered_widgets)
-        id_ = attrs.get('id')
-        id_ = self._id_fmt.format(id=id_) if id_ else ''
-        template = escape(self._li_fmt.format(classname=self.widget_class, subwidget=template))
-        rendered = []
-        for i, rendered_widget in enumerate(rendered_widgets):
-            rendered.append(self._li_fmt.format(classname=self.widget_class, subwidget=rendered_widget))
-        return self._ul_fmt.format(classname=self.widget_class,
-            toggle=self.toggle, id=id_, template=template,
-            subwidgets=''.join(rendered)
-        )
-
+            rendered_widgets.append(super(RepeatNamedMultiWidget, self).get_context(name, val, widget_attrs)['widget'])
+        if rendered_widgets:
+            context['widget']['rendered_widgets'] = rendered_widgets
+        return context
 
 class DependsWidget(CheckboxInput):
     classname = 'depends-widget'
