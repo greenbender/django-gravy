@@ -1,54 +1,91 @@
 from django.contrib.gis.geos import Point, LinearRing, Polygon
-from django.contrib.gis.geoip import GeoIP
+from django.contrib.gis.geoip import GeoIP as _GeoIP, GeoIPException
+from django.contrib.gis.geoip2 import GeoIP2 as _GeoIP2, GeoIP2Exception
 from django.conf import settings
+from geoip2.errors import AddressNotFoundError
+from geoip2.database import Reader
 import os
 import math
 
 
-__all__ = ['geoip', 'bearing', 'GeoVector', 'GeoCoord', 'GeoPolygon']
+__all__ = ['geoipx', 'GeoIPxException', 'bearing', 'GeoVector', 'GeoCoord', 'GeoPolygon']
 
 
 import logging
 log = logging.getLogger('gravy.geo')
 
 
-geoip = GeoIP()
+def ISP(response):
+    return {
+        'isp_name': response.isp,
+        'isp_organisation': response.organization,
+    }
 
 
-# geoip2
-try:
-    from geoip2.database import Reader
-    from geoip2.errors import AddressNotFoundError
+class GeoIP(_GeoIP):
+    """Add ISP support to GeoIP"""
+    
+    def __init__(self, path=None, cache=0, country=None, city=None, isp=None):
+        super(GeoIP, self).__init__(path=path, cache=cache, country=country, city=city)
 
-    __all__.extend(['geoip2', 'AddressNotFoundError'])
+    def isp(self, query):
+        raise GeoIPException('GeoIP ISP unsupported')
 
-    # TODO: how much work is it to make this GeoIP compatible?
-    class GeoIP2(object):
-        path = '/usr/share/GeoIP'
-        filenames = {
-            'city': 'GeoIP2-City.mmdb',
-            'country': 'GeoIP2-Country.mmdb',
-            'isp': 'GeoIP2-ISP.mmdb',
-        }
 
-        def __init__(self, raw=True):
-            self.raw = raw
-            self.readers = {}
+class GeoIP2(_GeoIP2):
+    """Add ISP support to GeoIP2"""
 
-        def __getattr__(self, name):
-            if name not in self.readers:
-                if name not in self.filenames:
-                    return super(GeoIP2, self).__getattr__(name)
-                filename = os.path.join(
-                    getattr(settings, 'GEOIP_PATH', self.path),
-                    getattr(settings, 'GEOIP2_' + name.upper(), self.filenames[name])
-                )
-                self.readers[name] = Reader(filename)
-            return getattr(self.readers[name], name)
+    _isp_file = ''
+    _isp = None
 
-    geoip2 = GeoIP2()
-except ImportError:
-    pass
+    def __init__(self, path=None, cache=0, country=None, city=None, isp=None):
+        super(GeoIP2, self).__init__(path=path, cache=cache, country=country, city=city)
+        path = getattr(settings, 'GEOIP_PATH')
+        if os.path.isdir(path):
+            isp_db = os.path.join(path, isp or getattr(settings, 'GEOIP_ISP', 'GeoIP2-ISP.mmdb'))
+            if os.path.isfile(isp_db):
+                self._isp = Reader(isp_db, mode=cache)
+                self._isp_file = isp_db
+
+    def isp(self, query):
+        if not self._isp:
+            raise GeoIP2Exception('Invalid GeoIP ISP file: %s' % self._isp_file)
+        enc_query = self._check_query(query)
+        return ISP(self._isp.isp(enc_query))
+
+
+class GeoIPx(object):
+
+    _proxy = None
+
+    def __init__(self, path=None, cache=0, country=None, city=None, isp=None):
+        self._proxy = GeoIP2(path=path, cache=cache, city=city, country=country, isp=isp)
+        if self._proxy._reader is None:
+            self._proxy = GeoIP(path=path, cache=cache, country=country, city=city)
+    
+    def __getattr__(self, name):
+        if self._proxy:
+            return getattr(self._proxy, name)
+        return super(GeoIPx, self).__getattr__(name)
+
+    def any(self, query):
+        result = {}
+        try:
+            result.update(self.city(query))
+        except:
+            try:
+                result.update(self.country(query))
+            except:
+                pass
+        try:
+            result.update(self.isp(query))
+        except:
+            pass
+        return result
+
+
+GeoIPxException = (GeoIP2Exception, GeoIPException, AddressNotFoundError)
+geoipx = GeoIPx()
 
 
 EARTH_RADIUS = 6378137

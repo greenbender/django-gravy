@@ -23,6 +23,10 @@
     };
 
     var SimpleMap = function(element, options) {
+        if (typeof OpenLayers === 'undefined') {
+            console.log("Requires OpenLayers");
+            return;
+        }
         this.element = element;
         this.options = $.extend({}, defaults, options, $(element).data());
         this.options.interval *= 1000;
