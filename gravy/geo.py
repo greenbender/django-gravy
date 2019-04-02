@@ -59,8 +59,11 @@ class GeoIPx(object):
     _proxy = None
 
     def __init__(self, path=None, cache=0, country=None, city=None, isp=None):
-        self._proxy = GeoIP2(path=path, cache=cache, city=city, country=country, isp=isp)
-        if self._proxy._reader is None:
+        try:
+            self._proxy = GeoIP2(path=path, cache=cache, city=city, country=country, isp=isp)
+        except:
+            pass
+        if self._proxy is None or self._proxy._reader is None:
             self._proxy = GeoIP(path=path, cache=cache, country=country, city=city)
     
     def __getattr__(self, name):
