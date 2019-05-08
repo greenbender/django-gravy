@@ -6,6 +6,13 @@
             center: [133.25, -24.81],
             zoom: 3,
             marker: 'marker.png',
+            colours: [
+                '#e6194B', '#3cb44b', '#4363d8', '#f58231',
+                '#911eb4', '#42d4f4', '#f032e6', '#bfef45',
+                '#fabebe', '#ffe119', '#469990', '#e6beff',
+                '#9A6324', '#fffac8', '#800000', '#aaffc3',
+                '#808000', '#ffd8b1', '#000075'
+            ],
             template:
                 '<div>Timestamp: {timestamp}</div>' +
                 '<div>Source: {sourceName}</div>' +
@@ -54,8 +61,8 @@
             // style
             this.style = new OpenLayers.Style(
                 {
-                    strokeWidth: 1,
-                    fillOpacity: 0.3,
+                    strokeWidth: '${stroke}',
+                    fillOpacity: '${opacity}',
                     fontFamily: '"Helvetica Neue",Helvetica,Arial,sans-serif',
                     fontColor: '#333',
                     fontSize: '10px',
@@ -64,33 +71,9 @@
                     graphicWidth: 30,
                     graphichHeight: 48,
                     graphicXOffset: -15,
-                    graphicYOffset: -24
-                },
-                {
-                    rules: [
-                        new OpenLayers.Rule({
-                            filter: new OpenLayers.Filter.Comparison({
-                                type: OpenLayers.Filter.Comparison.EQUAL_TO,
-                                property: 'sourceId',
-                                value: 1
-                            }),
-                            symbolizer: {
-                                strokeWidth: 0,
-                                fillColor: '#0fba1f'
-                            }
-                        }),
-                        new OpenLayers.Rule({
-                            filter: new OpenLayers.Filter.Comparison({
-                                type: OpenLayers.Filter.Comparison.EQUAL_TO,
-                                property: 'sourceId',
-                                value: 2
-                            }),
-                            symbolizer: {
-                                strokeColor: '#207cdb',
-                                fillColor: '#207cdb'
-                            }
-                        })
-                    ]
+                    graphicYOffset: -24,
+                    strokeColor: '${colour}',
+                    fillColor: '${colour}',
                 }
             ); 
 
@@ -150,6 +133,19 @@
             return new OpenLayers.Geometry.Point(lonlat.lon, lonlat.lat);
         },
 
+        _opacity_from_timestamp: function(ts) {
+            var age_hrs = Math.floor(moment().diff(moment(ts)) / (1000 * 60 * 60));
+            if (age_hrs < 1)
+                return 0.5;
+            if (age_hrs < 6)
+                return 0.4;
+            if (age_hrs < 24)
+                return 0.3;
+            if (age_hrs < (24 * 7))
+                return 0.2;
+            return 0.1;
+        },
+
         zoom: function() {
             if (this.layers.vector.features.length)
                 this.map.zoomToExtent(this.layers.vector.getDataExtent());
@@ -191,7 +187,7 @@
             return true;
         },
 
-        polygon: function(polygon) {
+        polygon: function(i, polygon) {
             var that = this;
             var points = [];
             $.each(polygon.points, function(_, point) {
@@ -201,7 +197,9 @@
             var poly = new OpenLayers.Geometry.Polygon([ring]);
             var area = new OpenLayers.Feature.Vector(poly, {
                 type: 'area',
-                sourceId: polygon.source.id
+                colour: polygon.colour || that.options.colours[i % that.options.colours.length],
+                stroke: polygon.stroke || (typeof polygon.accuracy === 'undefined') ? 0 : 1,
+                opacity: polygon.opacity || that._opacity_from_timestamp(polygon.timestamp)
             });
             var cent = this._point(polygon.longitude, polygon.latitude);
             var mark = new OpenLayers.Feature.Vector(cent, {
@@ -209,9 +207,9 @@
                 longitude: polygon.longitude.toFixed(4),
                 latitude: polygon.latitude.toFixed(4),
                 timestamp: polygon.timestamp,
-                accuracy: polygon.accuracy,
+                fromNow: moment(polygon.timestamp).fromNow(),
+                accuracy: polygon.accuracy || 'unknown',
                 sourceName: polygon.source.name,
-                sourceId: polygon.source.id,
                 area: area
             });
             this.layers.vector.addFeatures([area, mark]);
@@ -222,9 +220,7 @@
             $.get(this.options.polyUrl, function(data) {
                 that.layers.vector.removeAllFeatures();
                 that.layers.vector.destroyFeatures();
-                $.each(data.result.polygons, function(_, polygon) {
-                    that.polygon(polygon);
-                });
+                $.each(data.result.polygons, $.proxy(that.polygon, that));
                 if (data.result.polygons.length > 0)
                     that.zoom();
             });
