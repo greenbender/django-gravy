@@ -2,16 +2,17 @@
 
     var pluginName = 'simpleMap',
         defaults = {
+            autoUpdate: true,
             interval: 60,
             center: [133.25, -24.81],
             zoom: 3,
             marker: 'marker.png',
             colours: [
-                '#e6194B', '#3cb44b', '#4363d8', '#f58231',
-                '#911eb4', '#42d4f4', '#f032e6', '#bfef45',
-                '#fabebe', '#ffe119', '#469990', '#e6beff',
-                '#9A6324', '#fffac8', '#800000', '#aaffc3',
-                '#808000', '#ffd8b1', '#000075'
+                '#a9a9a9', '#e6194B', '#3cb44b', '#4363d8',
+                '#f58231', '#911eb4', '#42d4f4', '#f032e6',
+                '#bfef45', '#fabebe', '#ffe119', '#469990',
+                '#e6beff', '#9A6324', '#fffac8', '#800000',
+                '#aaffc3', '#808000', '#ffd8b1', '#000075'
             ],
             template:
                 '<div>Timestamp: {timestamp}</div>' +
@@ -47,10 +48,12 @@
         init: function() {
             this.$element = $(this.element);
             this.initMap();
-            if (this.options.interval) {
-                this.poll();
-            } else {
-                this.update();
+            if (this.options.autoUpdate) {
+                if (this.options.interval) {
+                    this.poll();
+                } else {
+                    this.update();
+                }
             }
             return this;
         },
@@ -215,15 +218,47 @@
             this.layers.vector.addFeatures([area, mark]);
         },
 
-        update: function() {
+        fence: function(i, fence) {
             var that = this;
-            $.get(this.options.polyUrl, function(data) {
-                that.layers.vector.removeAllFeatures();
-                that.layers.vector.destroyFeatures();
-                $.each(data.result.polygons, $.proxy(that.polygon, that));
-                if (data.result.polygons.length > 0)
-                    that.zoom();
+            var points = [];
+            $.each(fence.points, function(_, point) {
+                points.push(that._point(point));
             });
+            var ring = new OpenLayers.Geometry.LinearRing(points);
+            var poly = new OpenLayers.Geometry.Polygon([ring]);
+            var area = new OpenLayers.Feature.Vector(poly, {
+                type: 'area',
+                colour: fence.colour || '#ff0000',
+                stroke: fence.stroke || 10,
+                opacity: fence.opacity || 0.6
+            });
+            this.layers.vector.addFeatures([area]);
+        },
+
+        draw: function(data) {
+
+            var evt = $.Event('sm.ondraw', {'value': data});
+            this.$element.trigger(evt);
+
+            /* cleanup layers */
+            this.layers.vector.removeAllFeatures();
+            this.layers.vector.destroyFeatures();
+
+            /* draw polygons */
+            if (typeof data.result.polygons !== 'undefined') {
+                $.each(data.result.polygons, $.proxy(this.polygon, this));
+                if (data.result.polygons.length > 0)
+                    this.zoom();
+            }
+
+            /* draw fences */
+            if (typeof data.result.fences !== 'undefined') {
+                $.each(data.result.fences, $.proxy(this.fence, this));
+            }
+        },
+
+        update: function() {
+            $.get(this.options.polyUrl, $.proxy(this.draw, this));
         },
 
         poll: function() {
